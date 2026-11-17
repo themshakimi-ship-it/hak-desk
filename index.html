@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <style>
 /* Luxury desk: white paper, black ink, champagne gold. One theme by choice (light). Phone first: one client at a time. */
@@ -446,6 +446,39 @@ function waText(L, mode) { const k = waKey(L, mode) + langOf(L); return String(C
 const waLink = (L, mode) => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(waText(L, mode))}`;
 
 
+// ---------- REPORTS (day / week / month / quarter) ----------
+let RP = 'week';
+const qStart = s => { const m = +s.slice(5, 7); return s.slice(0, 5) + String(Math.floor((m - 1) / 3) * 3 + 1).padStart(2, '0') + '-01'; };
+function rpRange(p, t) {
+  if (p === 'day') return {from:t, to:t, pf:addDays(t, -1), pt:addDays(t, -1), label:'Today', prev:'yesterday', mul:1 / 22, cd:1};
+  if (p === 'week') { const m = monday(t); return {from:m, to:t, pf:addDays(m, -7), pt:addDays(m, -1), label:'This week', prev:'last week', mul:1 / 4.33, cd:5}; }
+  if (p === 'month') { const m = monthStart(t), pm = monthStart(addDays(m, -1)); return {from:m, to:t, pf:pm, pt:addDays(m, -1), label:parseD(t).toLocaleDateString('en-GB', {month:'long', timeZone:'UTC'}), prev:'last month', mul:1, cd:22}; }
+  const q = qStart(t), pq = qStart(addDays(q, -1)); return {from:q, to:t, pf:pq, pt:addDays(q, -1), label:'Q' + Math.ceil(+t.slice(5, 7) / 3) + ' ' + t.slice(0, 4), prev:'last quarter', mul:3, cd:66};
+}
+function promosIn(from, to) { return events().filter(e => e.o === 'promo' && e.d >= from && e.d <= to).length; }
+function videosIn(from, to) { let n = 0; for (let d = from; d <= to; d = addDays(d, 1)) n += +(KV['day-' + d] || {}).videos || 0; return n; }
+function rpData(p) {
+  const t = todayStr(), r = rpRange(p, t), k = kpis(r.from, r.to), pk = kpis(r.pf, r.pt);
+  const tg = {calls:CFG.calls * r.cd, conv:Math.max(1, Math.round(CFG.conv * r.mul)), meet:Math.max(1, Math.round(CFG.meet * r.mul)), offer:Math.max(1, Math.round(CFG.offer * r.mul)), deal:Math.max(1, Math.round(CFG.deal * r.mul)), comm:Math.round(CFG.budget * r.mul)};
+  const rows = [['Calls', k.calls, pk.calls, tg.calls], ['WhatsApps', k.msgs, pk.msgs, ''], ['Promotions sent', promosIn(r.from, r.to), promosIn(r.pf, r.pt), ''], ['Conversations', k.conv, pk.conv, tg.conv], ['Meetings', k.meet, pk.meet, tg.meet], ['Offers / EOIs', k.offer, pk.offer, tg.offer], ['Deals', k.deal, pk.deal, tg.deal], ['Commission (AED)', k.comm, pk.comm, tg.comm], ['Videos', videosIn(r.from, r.to), videosIn(r.pf, r.pt), CFG.videos * (p === 'day' ? 1 : p === 'week' ? 7 : p === 'month' ? 30 : 91)]];
+  return {r, rows};
+}
+function reportHTML() {
+  const {r, rows} = rpData(RP);
+  const arrow = (a, b) => a > b ? `<span style="color:var(--ok)">▲ ${fmt(a - b)}</span>` : a < b ? `<span style="color:var(--hot)">▼ ${fmt(b - a)}</span>` : '<span class="muted">=</span>';
+  return `<div class="card panel" style="margin-top:14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><div class="filters" style="margin:0">${[['day', 'Today'], ['week', 'Week'], ['month', 'Month'], ['quarter', 'Quarter']].map(([k, l]) => `<button class="chip ${RP === k ? 'on' : ''}" data-rp="${k}">${l}</button>`).join('')}</div><div class="grow"></div><button class="btn sm" data-rcopy>Copy report</button><button class="btn sm ink" data-export>${I.dl}Excel</button></div>
+  <h3 style="margin-top:16px"><span>${esc(r.label)} report</span><span style="text-transform:none;letter-spacing:0;font-weight:600">vs ${r.prev}</span></h3>
+  <div class="tw"><table class="t num"><thead><tr><th></th><th>Actual</th><th>Target</th><th>Before</th></tr></thead><tbody>${rows.map(([l, a, b, g]) => `<tr><td><b>${l}</b></td><td><span class="pill ${g === '' ? '' : a >= g ? 'ok' : a >= g * .7 ? 'warn' : 'hot'}">${fmt(a)}</span></td><td>${g === '' ? '–' : fmt(g)}</td><td>${arrow(a, b)}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function reportText(p) {
+  const {r, rows} = rpData(p), t = todayStr();
+  return `${r.label} report · Mostafa Hakimi · ${t}\n` + rows.map(([l, a, b, g]) => `${l}: ${fmt(a)}${g !== '' ? ' (target ' + fmt(g) + ')' : ''} · ${r.prev} ${fmt(b)}`).join('\n') + `\nPipeline value: AED ${fmt(all().filter(L => HOTSET.includes(L.status)).reduce((a, L) => a + (+(STATE[L.i] || {}).val || 0), 0))}`;
+}
+// ---------- local copy for instant open ----------
+const CKEY = 'hak-cache-v1';
+function saveCache() { clearTimeout(saveCache.t); saveCache.t = setTimeout(() => { if (!BASE.length || !store || store.name !== 'supabase' || !store.ok) return; try { localStorage.setItem(CKEY, JSON.stringify({base:BASE, added:ADDED, state:STATE, kv:KV, at:Date.now()})); } catch (e) {} }, 2500); }
+function readCache() { try { return JSON.parse(localStorage.getItem(CKEY) || 'null'); } catch (e) { return null; } }
+
 // ---------- PROJECTS & PROMOTIONS ----------
 let PROJ = {items:[], updated:''}, pFilt = 'All', pQuery = '', AUD = null;
 async function loadProjects() { try { const r = await fetch('projects.json?v=' + Date.now(), {cache:'no-store'}); if (r.ok) { PROJ = await r.json(); if (!LOG && BASE.length) render(); } } catch (e) {} }
@@ -510,6 +543,7 @@ function render() {
   const m = $('#main');
   if (NEEDS_IMPORT) { m.innerHTML = vImport(); return; }
   m.innerHTML = (SAVE_WARN ? `<div class="banner">${SAVE_WARN}</div>` : '') + (view === 'clients' ? vClients() : view === 'projects' ? vProjects() : view === 'results' ? vResults() : vNow());
+  saveCache();
   const pq = $('#pq'); if (pq) pq.oninput = e => { pQuery = e.target.value; clearTimeout(render.p); render.p = setTimeout(() => { const pos = e.target.selectionStart; render(); const n = $('#pq'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); };
   const q = $('#q'); if (q) q.oninput = e => { query = e.target.value; more = 0; clearTimeout(render.t); render.t = setTimeout(() => { const pos = e.target.selectionStart; render(); const n = $('#q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 200); };
 }
@@ -610,7 +644,7 @@ function vResults() {
   const cs = countryList(leads).filter(c => c.c !== 'No number yet').slice(0, 8), maxC = Math.max(1, ...cs.map(c => c.n));
   const funnel = [['Clients', leads.length], ['Worked so far', leads.filter(L => L.has).length], ['Conversations this month', mo.conv], ['Meetings this month', mo.meet], ['Offers / EOIs this month', mo.offer], ['Deals this month', mo.deal]], fmax = Math.max(1, ...funnel.map(f => f[1]));
   const over = leads.filter(L => L.due && L.due < t).length;
-  return `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {month:'long', year:'numeric', timeZone:'UTC'})}</div><h1 class="h1">Results</h1></div><div class="grow"></div><button class="btn" data-report>Copy Friday report</button><button class="btn ink" data-export>${I.dl}Export to Excel</button></div>
+  return `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {month:'long', year:'numeric', timeZone:'UTC'})}</div><h1 class="h1">Results</h1></div></div>${reportHTML()}
   <div class="tiles">
     <div class="card tile"><span class="eyebrow">Calls today</span><span class="v num">${td.calls}<small> / ${CFG.calls}</small></span><span class="muted" style="font-size:12.5px">${td.msgs} WhatsApps sent</span></div>
     <div class="card tile"><span class="eyebrow">Overdue</span><span class="v num" style="color:${over ? 'var(--hot)' : 'var(--ok)'}">${over}</span><span class="muted" style="font-size:12.5px">Your standard: zero</span></div>
@@ -734,6 +768,8 @@ async function exportXlsx() {
   const t = todayStr(), leads = all(), mo = kpis(monthStart(t), monthEnd(t)), wk = kpis(monday(t), t);
   const wb = XLSX.utils.book_new();
   const sum = [['Mostafa Hakimi · Client Desk', ''], ['Report date', t], [], ['THIS MONTH', 'Actual', 'Target'], ['Calls', mo.calls, CFG.calls * 22], ['Conversations', mo.conv, CFG.conv], ['Meetings', mo.meet, CFG.meet], ['Offers / EOIs', mo.offer, CFG.offer], ['Deals', mo.deal, CFG.deal], ['Commission (AED)', mo.comm, CFG.budget], ['Commission stretch (AED)', '', CFG.stretch], [], ['THIS WEEK', 'Actual', 'Target'], ['Calls', wk.calls, CFG.calls * 5], ['Conversations', wk.conv, ''], ['Meetings', wk.meet, ''], ['Offers', wk.offer, ''], ['Deals', wk.deal, ''], [], ['PIPELINE', 'Clients'], ...STATUSES.map(s => [s, leads.filter(L => L.status === s).length]), [], ['COUNTRIES', 'Clients'], ...countryList(leads).map(c => [c.c, c.n])];
+  for (const p of ['day', 'week', 'month', 'quarter']) { const {r, rows} = rpData(p); sum.push([], [r.label.toUpperCase() + ' (' + r.from + ' to ' + r.to + ')', 'Actual', 'Target', 'Previous'], ...rows.map(([l, a, b, g]) => [l, a, g, b])); }
+  if (typeof XLSX === 'undefined') { toast('Excel is still loading. Try again in a second.'); return; }
   const s1 = XLSX.utils.aoa_to_sheet(sum); s1['!cols'] = [{wch:30}, {wch:14}, {wch:14}]; XLSX.utils.book_append_sheet(wb, s1, 'Summary');
   const rows = leads.map(L => ({Name:L.name, Phone:L.p, Country:L.c, Status:L.status, 'Before':(OLD[L.t] || [''])[0], Touches:L.touches, 'Last contact':L.last, 'Next follow-up':L.due || '', 'Next step':L.step, Notes:L.note || L.o || '', 'Budget (AED)':L.bud || '', Project:(STATE[L.i] || {}).proj || '', 'Deal value (AED)':(STATE[L.i] || {}).val || '', Meeting:(((STATE[L.i] || {}).meet) || {}).d || '', Source:L.src || 'Added'}));
   const s2 = XLSX.utils.json_to_sheet(rows); s2['!cols'] = [26, 17, 16, 14, 16, 8, 12, 13, 30, 50, 12, 30].map(w => ({wch:w})); XLSX.utils.book_append_sheet(wb, s2, 'Clients');
@@ -747,9 +783,11 @@ async function exportXlsx() {
 
 // ---------- clicks ----------
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-promo],[data-aud],[data-pstart],[data-psend],[data-pstop],[data-pfilt],[data-setpw],[data-confirm],[data-meet],[data-call],[data-wa],[data-wa-after],[data-open],[data-log],[data-skip],[data-reply],[data-country],[data-filter],[data-more],[data-add],[data-close],[data-out],[data-temp],[data-savelog],[data-savesheet],[data-savephone],[data-phone],[data-vid],[data-market],[data-export],[data-report],[data-saveadd],[data-import]');
+  const el = e.target.closest('[data-rp],[data-rcopy],[data-promo],[data-aud],[data-pstart],[data-psend],[data-pstop],[data-pfilt],[data-setpw],[data-confirm],[data-meet],[data-call],[data-wa],[data-wa-after],[data-open],[data-log],[data-skip],[data-reply],[data-country],[data-filter],[data-more],[data-add],[data-close],[data-out],[data-temp],[data-savelog],[data-savesheet],[data-savephone],[data-phone],[data-vid],[data-market],[data-export],[data-report],[data-saveadd],[data-import]');
   if (!el) { if (e.target === $('#scrim')) hide(); return; }
   const d = el.dataset;
+  if (d.rp) { RP = d.rp; render(); return; }
+  if (d.rcopy !== undefined) { navigator.clipboard.writeText(reportText(RP)).then(() => toast('Report copied. Paste it to your CEO.'), () => toast('Copy was blocked here.')); return; }
   if (d.pfilt) { pFilt = d.pfilt; render(); return; }
   if (d.promo) { openPromo(d.promo); return; }
   if (d.aud) { const [k, v] = [d.aud[0], d.aud.slice(2)]; if (k === 'g') { AUD.gs.has(v) ? AUD.gs.delete(v) : AUD.gs.add(v); } else if (v === '*') AUD.cs.clear(); else { AUD.cs.has(v) ? AUD.cs.delete(v) : AUD.cs.add(v); } openPromo(AUD.pid); return; }
@@ -832,12 +870,13 @@ setInterval(() => { clock(); if (store && store.ok && view === 'now' && !$('#she
 function syncNote(t) { SAVE_WARN = t; render(); }
 
 async function boot() {
-  clock(); loadProjects();
+  clock(); loadProjects(); if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   if (CFGX && CFGX.supabaseUrl) {
     store = SupaStore;
     let r; try { r = await store.init(); } catch (e) { $('#main').innerHTML = '<div class="card login"><div class="h2">Could not connect</div><div class="muted">Check your internet connection, then reload.</div></div>'; return; }
     if (r === 'login') { nav(); $('#main').innerHTML = vLogin(); const msg = t => { $('#lg-msg').textContent = t; }; $('#lg-pw').onclick = async () => { const em = $('#lg-email').value.trim(), pw = $('#lg-pass').value; if (!em || !pw) return msg('Enter your email and password.'); msg('Signing in…'); const {error} = await store.sb.auth.signInWithPassword({email:em, password:pw}); if (error) return msg('Wrong email or password. No password yet? Use the email link once, then set one in Results › Settings.'); location.reload(); }; $('#lg-pass').onkeydown = e => { if (e.key === 'Enter') $('#lg-pw').click(); }; $('#lg-go').onclick = async () => { const em = $('#lg-email').value.trim(); if (!em) return; const {error} = await store.sb.auth.signInWithOtp({email:em, options:{emailRedirectTo:location.origin + location.pathname, shouldCreateUser:false}}); msg(error ? (/rate/i.test(error.message) ? 'Too many emails this hour. Use your password, or try again in an hour.' : error.message) : 'Check your email and tap the link. On iPhone it opens in Safari: set your password there.'); }; return; }
-    try { BASE = await store.base(); } catch (e) { $('#main').innerHTML = `<div class="card login"><div class="h2">Not allowed</div><div class="muted">This email cannot open the client list. Sign in with your own email.</div><button class="btn" onclick="location.reload()">Reload</button></div>`; return; }
+    const cached = readCache(); if (cached && cached.base && cached.base.length) { BASE = cached.base; ADDED = cached.added || {}; STATE = cached.state || {}; KV = cached.kv || {}; CFG = {...DEF, ...(KV.config || {})}; route(); }
+    try { BASE = await store.base(); } catch (e) { if (cached && cached.base && cached.base.length) { SAVE_WARN = 'Offline. Showing your saved copy; changes save when you are back online.'; render(); return; } $('#main').innerHTML = `<div class="card login"><div class="h2">Not allowed</div><div class="muted">This email cannot open the client list. Sign in with your own email.</div><button class="btn" onclick="location.reload()">Reload</button></div>`; return; }
     if (!BASE.length) { NEEDS_IMPORT = true; route(); return; }
   } else {
     store = ArtifactStore;
