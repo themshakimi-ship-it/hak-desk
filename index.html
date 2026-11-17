@@ -50,6 +50,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 /* bottom tabs (phone) */
 .btabs{display:none}
 /* generic */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:14px}.pc{overflow:hidden}.pc img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#EEE}.pc .pb{padding:14px 16px 16px;display:grid;gap:8px}.pc .pn{font-weight:800;font-size:18px;line-height:1.2}.pc .pa{display:flex;gap:8px;margin-top:4px}.pc .pa .btn{flex:1;height:40px}.login .inp{margin-top:2px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:var(--paper);font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
 .btn svg{width:18px;height:18px}
@@ -231,6 +232,7 @@ const fmt = n => Math.round(n || 0).toLocaleString('en-US');
 const I = {
   call:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
   wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1.1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.7-.3z"/></svg>',
+  building:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V5l8-3v19M12 21V9l8 3v9M2 21h20M7 8h2M7 12h2M7 16h2M15 14h2M15 17h2"/></svg>',
   now:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.8a3.4 3.4 0 0 1 0 6.4M18 14.6c1.9.7 3.1 2.5 3.5 5.4"/></svg>',
   chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>',
@@ -302,6 +304,13 @@ const DEF = {calls:10, conv:60, meet:15, offer:6, deal:3, budget:166667, stretch
   wa7_en:"Hi {name}, it's Hakimi. Just confirming our meeting tomorrow at {time}{place}. See you then.",
   wa7_fr:"Bonjour {name}, c'est Hakimi. Je confirme notre rendez-vous demain à {time}{place}. À demain.",
   wa7_ar:"مرحباً {name}، معك حكيمي. أأكد موعدنا بكرة الساعة {time}{place}. أشوفك إن شاء الله.",
+  wa8_en:"Hi {name}, it's Hakimi. I'm looking at {project} by {developer} in {area}, from AED {price}, handover {handover}. I think it's worth a look for you. Want me to send you the details?",
+  wa8_fr:"Bonjour {name}, c'est Hakimi. Je regarde {project} de {developer} à {area}, à partir de {price} AED, livraison {handover}. Je pense que ça vaut le coup d'œil pour vous. Je vous envoie les détails ?",
+  wa8_ar:"مرحباً {name}، معك حكيمي. عندي مشروع {project} من {developer} في {area}، الأسعار تبدأ من {price} درهم، والتسليم {handover}. أعتقد يستاهل تشوفه. تحب أرسل لك التفاصيل؟",
+  wa9_en:"Hi {name}, it's Hakimi. I've started a private WhatsApp community where I share new Dubai launches and my honest view on what's worth buying and what isn't. If you'd like to join: {link}",
+  wa9_fr:"Bonjour {name}, c'est Hakimi. J'ai lancé une communauté WhatsApp privée où je partage les nouveaux lancements à Dubaï et mon avis honnête sur ce qui vaut la peine d'être acheté ou non. Pour rejoindre : {link}",
+  wa9_ar:"مرحباً {name}، معك حكيمي. فتحت مجتمع واتساب خاص أشارك فيه المشاريع الجديدة في دبي ورأيي الصريح: شو يستاهل الشراء وشو لا. إذا حاب تنضم: {link}",
+  comm_link:"", pcap:30,
   trip_city:"", trip_dates:""};
 const CAD = [0, 3, 7, 7, 14, 30, 60, 90, 90];
 const STATUSES = ['New', 'No answer', 'Contacted', 'Warm', 'Hot', 'Meeting set', 'Offer/EOI sent', 'Closed won', 'Past client', 'Not now', 'Dead'];
@@ -436,8 +445,62 @@ function waKey(L, mode) {
 function waText(L, mode) { const k = waKey(L, mode) + langOf(L); return String(CFG[k] || DEF[k]).replace(/\{name\}/g, firstName(L.name)).replace(/\{city\}/g, CFG.trip_city || '[city]').replace(/\{dates\}/g, CFG.trip_dates || '[dates]'); }
 const waLink = (L, mode) => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(waText(L, mode))}`;
 
+
+// ---------- PROJECTS & PROMOTIONS ----------
+let PROJ = {items:[], updated:''}, pFilt = 'All', pQuery = '', AUD = null;
+async function loadProjects() { try { const r = await fetch('projects.json?v=' + Date.now(), {cache:'no-store'}); if (r.ok) { PROJ = await r.json(); if (!LOG) render(); } } catch (e) {} }
+const mAED = n => n >= 1e6 ? (Math.round(n / 1e5) / 10) + 'M' : fmt(n / 1e3) + 'K';
+const hoTxt = h => { if (!h) return ''; const [y, m] = h.split('-'); return 'Q' + Math.ceil(+m / 3) + ' ' + y; };
+const brTxt = p => p.bmax == null ? '' : (p.bmin === p.bmax ? '' : (p.bmin ? p.bmin : 'Studio') + '–') + p.bmax + ' BR';
+const PFILTERS = {All:p => true, 'New launches':p => p.tag === 'New launch', Emaar:p => p.dev === 'Emaar', Nakheel:p => p.dev === 'Nakheel', Meraas:p => p.dev === 'Meraas', Ellington:p => p.dev === 'Ellington', 'Villas & townhouses':p => (p.types || []).some(t => /Villa|Townhouse/.test(t))};
+const PGROUPS = {'Hot':L => HOTSET.includes(L.status) || (!L.has && L.t === 'Hot'), 'Warm':L => L.status === 'Warm' || (!L.has && L.t === 'Warm'), 'Past clients':L => L.status === 'Past client' || (!L.has && L.t === 'Past client'), 'Contacted':L => L.status === 'Contacted', 'Never reached':L => ['New', 'No answer'].includes(L.status) && !(!L.has && ['Hot', 'Warm', 'Past client'].includes(L.t))};
+const projOf = pid => pid === 'comm' ? {id:'comm', name:'My WhatsApp community'} : (PROJ.items || []).find(p => String(p.id) === String(pid));
+function promoText(L, P) {
+  const lg = langOf(L), k = (P.id === 'comm' ? 'wa9_' : 'wa8_') + lg;
+  return String(CFG[k] || DEF[k]).replace(/\{name\}/g, firstName(L.name)).replace(/\{project\}/g, P.name || '').replace(/\{developer\}/g, P.dev || '').replace(/\{area\}/g, P.area || 'Dubai').replace(/\{price\}/g, P.min ? mAED(P.min) : '').replace(/\{handover\}/g, hoTxt(P.handover) || (lg === 'fr' ? 'à confirmer' : lg === 'ar' ? 'يتأكد لاحقاً' : 'to be confirmed')).replace(/\{link\}/g, CFG.comm_link || '');
+}
+const promoLink = (L, P) => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(promoText(L, P))}`;
+function promoPool() { const t = todayStr(), lim = addDays(t, -14); return all().filter(L => L.p && ACTIVE(L) && !(L.ev || []).some(e => e.o === 'promo' && e.d >= lim)); }
+function audList() { if (!AUD) return []; return promoPool().filter(L => [...AUD.gs].some(g => PGROUPS[g](L)) && (!AUD.cs.size || AUD.cs.has(L.c))).sort((a, b) => hotScore(b) - hotScore(a)); }
+function openPromo(pid) {
+  const P = projOf(pid); if (!P) return; if (!AUD || AUD.pid !== pid) AUD = {pid, gs:new Set(['Hot', 'Warm', 'Past clients']), cs:new Set()};
+  sheetId = null; LOG = null;
+  const pool = promoPool().filter(L => [...AUD.gs].some(g => PGROUPS[g](L))), cc = {}; pool.forEach(L => { if (L.c) cc[L.c] = (cc[L.c] || 0) + 1; });
+  const cs = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 12), list = audList(), ex = list[0], cap = +CFG.pcap || 30;
+  $('#sheet').innerHTML = `<div class="sh"><button class="ic x" data-close aria-label="Close">${I.x}</button><div class="eyebrow" style="color:var(--gold2)">${pid === 'comm' ? 'Community invite' : 'Promotion'}</div><div class="nm">${esc(P.name)}</div>${P.dev ? `<div class="sub">${esc(P.dev)}${P.area ? ' · ' + esc(P.area) : ''}${P.min ? ' · from AED ' + mAED(P.min) : ''}</div>` : ''}</div>
+  <div class="sb"><div class="field"><label>Who gets it</label><div class="filters" style="flex-wrap:wrap">${Object.keys(PGROUPS).map(g => `<button class="chip ${AUD.gs.has(g) ? 'on' : ''}" data-aud="g:${g}">${g}</button>`).join('')}</div></div>
+  <div class="field"><label>Countries</label><div class="filters" style="flex-wrap:wrap"><button class="chip ${!AUD.cs.size ? 'on' : ''}" data-aud="c:*">All countries</button>${cs.map(([c, n]) => `<button class="chip ${AUD.cs.has(c) ? 'on' : ''}" data-aud="c:${esc(c)}">${flag(pool.find(L => L.c === c).cc)} ${esc(c)} <span class="c num">${n}</span></button>`).join('')}</div></div>
+  <div class="nextline"><span class="grow"><b class="num">${list.length} clients</b> · about ${Math.max(1, Math.ceil(list.length / cap))} day${list.length > cap ? 's' : ''} at ${cap} a day</span></div>
+  ${ex ? `<div class="field"><label>Example message (${esc(firstName(ex.name))}, ${langOf(ex).toUpperCase()})</label><div class="card" style="padding:12px 14px;font-size:14px;white-space:pre-wrap;box-shadow:none" dir="auto">${esc(promoText(ex, P))}</div></div>` : ''}
+  <div class="muted" style="font-size:12.5px">Clients who got a promotion in the last 14 days are skipped. Each one is sent by you with one tap, so your number stays safe.</div>
+  <button class="btn lg ink" data-pstart="${esc(String(pid))}" ${list.length ? '' : 'disabled'}>Start · ${list.length} clients</button></div>`;
+  show();
+}
+function promoState() {
+  const pr = KV.promo; if (!pr || !pr.on) return null; const t = todayStr(), sent = pr.sent || {};
+  const left = (pr.ids || []).map(byId).filter(L => L && L.p && ACTIVE(L) && !sent[L.i]);
+  return {pr, P:projOf(pr.pid) || {id:pr.pid, name:pr.name}, left, today:Object.values(sent).filter(d => d === t).length, done:Object.keys(sent).length, cap:+CFG.pcap || 30};
+}
+function promoHTML(short) {
+  const st = promoState(); if (!st) return ''; const {pr, P, left, today, done, cap} = st;
+  if (short) return `<div class="card ask" style="border-left-color:var(--gold)"><div class="grow"><b>Promotion · ${esc(P.name)}</b><div class="muted" style="font-size:13px">${today} of ${cap} sent today · ${left.length} left</div></div><a class="btn sm" href="#projects">Continue</a></div>`;
+  const rows = left.slice().sort((a, b) => callableNow(b) - callableNow(a)).slice(0, 10);
+  return `<div class="sec"><span class="h2">Sending now</span><span class="muted" style="font-size:13px">${esc(P.name)} · ${done} sent · ${left.length} left</span></div>
+  <div class="card panel">${!left.length ? '<div class="muted">All sent. Well done.</div>' : today >= cap ? `<div class="muted">Today's ${cap} are sent. The next ones show tomorrow, which keeps your number safe.</div>` : `<div class="muted" style="font-size:13px;margin-bottom:8px">${today} of ${cap} today. Tap WhatsApp, press send, come back.</div><div class="list">${rows.map(L => `<div class="row" style="grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)"><div class="flag">${flag(L.cc)}</div><div class="t"><b>${esc(L.name)}</b><span>${esc(L.c || '')}${tzOf(L) ? ' · ' + hm(tzOf(L)) + ' there' : ''} · ${esc(L.has ? L.status : (L.t || L.status))}</span></div><a class="btn sm wa" href="${promoLink(L, P)}" target="_blank" rel="noopener" data-psend="${L.i}">${I.wa}Send</a></div>`).join('')}</div>`}
+  <button class="btn sm" data-pstop style="margin-top:12px">Stop this promotion</button></div>`;
+}
+function vProjects() {
+  const its = (PROJ.items || []).filter(PFILTERS[pFilt]).filter(p => !pQuery || (p.name + ' ' + p.dev + ' ' + p.area).toLowerCase().includes(pQuery.toLowerCase()));
+  return `${promoHTML()}
+  <div class="sec"><span class="h2">Projects</span><span class="muted" style="font-size:13px">${(PROJ.items || []).length} from Reelly · updated ${esc(PROJ.updated || '')} · ask Claude for more</span></div>
+  <div class="card panel" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div class="grow" style="min-width:200px"><b>WhatsApp community</b><div class="muted" style="font-size:13px">${CFG.comm_link ? 'Invite clients to join. They choose to join.' : 'Create the community in WhatsApp, then paste its invite link in Results › Settings.'}</div></div>${CFG.comm_link ? '<button class="btn" data-promo="comm">Invite clients</button>' : ''}</div>
+  <div class="toolbar" style="margin-top:14px"><label class="search">${I.search}<input id="pq" placeholder="Search project, developer or area" value="${esc(pQuery)}" aria-label="Search projects"></label></div>
+  <div class="filters">${Object.keys(PFILTERS).map(k => `<button class="chip ${pFilt === k ? 'on' : ''}" data-pfilt="${k}">${k} <span class="c num">${(PROJ.items || []).filter(PFILTERS[k]).length}</span></button>`).join('')}</div>
+  <div class="pgrid">${its.map(p => `<div class="card pc">${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<div class="pb"><div style="display:flex;gap:6px;flex-wrap:wrap">${p.tag === 'New launch' ? '<span class="pill gold">New launch</span>' : ''}${p.handover ? `<span class="pill">Handover ${hoTxt(p.handover)}</span>` : ''}</div><div class="pn">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(p.dev || '')}${p.area ? ' · ' + esc(p.area) : ''}</div><div style="font-size:14px"><b>From AED ${mAED(p.min)}</b>${brTxt(p) ? ' · ' + brTxt(p) : ''}${(p.types || []).length ? ' · ' + esc(p.types.join(', ')) : ''}</div><div class="pa"><button class="btn ink" data-promo="${p.id}">Promote</button><a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener">Details</a></div></div></div>`).join('') || '<div class="muted">No projects match.</div>'}</div>`;
+}
+
 // ---------- render ----------
-const NAV = [['now', 'Call now', 'now'], ['clients', 'Clients', 'people'], ['results', 'Results', 'chart']];
+const NAV = [['now', 'Call now', 'now'], ['clients', 'Clients', 'people'], ['projects', 'Projects', 'building'], ['results', 'Results', 'chart']];
 function nav() {
   $('#tabs').innerHTML = NAV.map(([k, t]) => `<a href="#${k}" class="${view === k ? 'on' : ''}">${t}</a>`).join('');
   $('#btabs').innerHTML = NAV.map(([k, t, i]) => `<a href="#${k}" class="${view === k ? 'on' : ''}">${I[i]}${t}</a>`).join('');
@@ -446,7 +509,8 @@ function render() {
   nav();
   const m = $('#main');
   if (NEEDS_IMPORT) { m.innerHTML = vImport(); return; }
-  m.innerHTML = (SAVE_WARN ? `<div class="banner">${SAVE_WARN}</div>` : '') + (view === 'clients' ? vClients() : view === 'results' ? vResults() : vNow());
+  m.innerHTML = (SAVE_WARN ? `<div class="banner">${SAVE_WARN}</div>` : '') + (view === 'clients' ? vClients() : view === 'projects' ? vProjects() : view === 'results' ? vResults() : vNow());
+  const pq = $('#pq'); if (pq) pq.oninput = e => { pQuery = e.target.value; clearTimeout(render.p); render.p = setTimeout(() => { const pos = e.target.selectionStart; render(); const n = $('#pq'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); };
   const q = $('#q'); if (q) q.oninput = e => { query = e.target.value; more = 0; clearTimeout(render.t); render.t = setTimeout(() => { const pos = e.target.selectionStart; render(); const n = $('#q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 200); };
 }
 
@@ -477,7 +541,7 @@ function vNow() {
   const dueAll = all().filter(x => x.p && ACTIVE(x) && isDue(x)).length;
   let html = `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', timeZone:'UTC'})} · Dubai ${hm('Asia/Dubai')}</div><h1 class="h1">${greet}, Hak</h1></div><div class="grow"></div>
     <div class="prog"><span class="num" style="font-weight:800">${td.calls} / ${CFG.calls} calls</span><span class="bar"><i style="width:${Math.min(100, td.calls / CFG.calls * 100)}%"></i></span></div></div>`;
-  html += agendaHTML();
+  html += agendaHTML() + promoHTML(true);
   if (asks.length) html += `<div class="sec" style="margin-top:6px"><span class="eyebrow">First, quick answers</span></div>` + asks.map(L => `<div class="card ask"><div class="flag">${flag(L.cc)}</div><div class="grow"><b>Did ${esc(L.name)} reply on WhatsApp?</b><div class="muted" style="font-size:13px">Message sent ${nice(L.ev[L.ev.length - 1].d) === 'today' ? 'today' : parseD(L.ev[L.ev.length - 1].d).toLocaleDateString('en-GB', {weekday:'long', timeZone:'UTC'})}</div></div><button class="btn sm ink" data-reply="${L.i}:1">Yes, replied</button><button class="btn sm" data-reply="${L.i}:0">No reply</button></div>`).join('');
   if (F) {
     const tz = tzOf(F), old = OLD[F.t] || ['', ''];
@@ -577,7 +641,7 @@ function vResults() {
   <div class="card tw"><table class="t num"><thead><tr><th>Week of</th><th>Calls</th><th>Conversations</th><th>Meetings</th><th>Offers</th><th>Deals</th><th>Commission</th><th>Videos</th></tr></thead><tbody>${ws.slice().reverse().map(w => `<tr><td><b>${parseD(w.w).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'UTC'})}</b></td><td><span class="pill ${w.calls >= wt ? 'ok' : w.calls >= wt * .7 ? 'warn' : w.calls ? 'hot' : ''}">${w.calls}</span></td><td>${w.conv}</td><td>${w.meet}</td><td>${w.offer}</td><td>${w.deal}</td><td>${fmt(w.comm)}</td><td>${videosWeek(w.w)}</td></tr>`).join('')}</tbody></table></div>
   <div class="sec"><span class="h2">Settings</span><span class="muted" style="font-size:13px">Targets and your WhatsApp messages. {name} becomes the client's first name.</span></div>
   <div class="card panel"><div class="fields">${[['calls', 'Calls per day'], ['conv', 'Conversations / month'], ['meet', 'Meetings / month'], ['offer', 'Offers / month'], ['deal', 'Deals / month'], ['budget', 'Commission budget (AED)'], ['stretch', 'Commission stretch (AED)'], ['videos', 'Videos per day'], ['qm', 'New leads/day · Gulf & Asia'], ['qa', 'New leads/day · Africa & Europe'], ['qe', 'New leads/day · Americas']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><input class="inp num" type="number" id="c-${k}" data-cfg="${k}" value="${CFG[k]}"></div>`).join('')}</div>
-  <div class="fields" style="margin-top:14px"><div class="field"><label for="c-trip_city">Next trip · city</label><input class="inp" id="c-trip_city" data-cfg="trip_city" value="${esc(CFG.trip_city || '')}" placeholder="Lagos"></div><div class="field"><label for="c-trip_dates">Next trip · dates</label><input class="inp" id="c-trip_dates" data-cfg="trip_dates" value="${esc(CFG.trip_dates || '')}" placeholder="3 to 7 December"></div></div><div class="fields" style="grid-template-columns:1fr 1fr;margin-top:14px">${[['wa1n_en', 'New lead, missed call · EN'], ['wa1n_fr', 'New lead, missed call · FR'], ['wa0_en', 'New lead, no call yet · EN'], ['wa0_fr', 'New lead, no call yet · FR'], ['wa1_en', 'Old lead, missed call · EN'], ['wa1_fr', 'Old lead, missed call · FR'], ['wa2_en', 'No reply · EN'], ['wa2_fr', 'No reply · FR'], ['wa3_en', 'Went quiet, 7 days · EN'], ['wa3_fr', 'Went quiet, 7 days · FR'], ['wa4_en', 'Went quiet, close file · EN'], ['wa4_fr', 'Went quiet, close file · FR'], ['wa5_en', 'Reconnect, 3+ months · EN'], ['wa5_fr', 'Reconnect, 3+ months · FR'], ['wa6_en', 'Trip invite · EN'], ['wa6_fr', 'Trip invite · FR'], ['wa7_en', 'Reconfirm meeting · EN'], ['wa7_fr', 'Reconfirm meeting · FR'], ['wa1n_ar', 'New lead, missed call · AR'], ['wa0_ar', 'New lead, no call yet · AR'], ['wa1_ar', 'Old lead, missed call · AR'], ['wa2_ar', 'No reply · AR'], ['wa3_ar', 'Went quiet, 7 days · AR'], ['wa4_ar', 'Went quiet, close file · AR'], ['wa5_ar', 'Reconnect · AR'], ['wa6_ar', 'Trip invite · AR'], ['wa7_ar', 'Reconfirm meeting · AR']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><textarea class="inp" id="c-${k}" data-cfg="${k}">${esc(CFG[k])}</textarea></div>`).join('')}</div></div>`;
+  <div class="fields" style="margin-top:14px"><div class="field"><label for="c-trip_city">Next trip · city</label><input class="inp" id="c-trip_city" data-cfg="trip_city" value="${esc(CFG.trip_city || '')}" placeholder="Lagos"></div><div class="field"><label for="c-trip_dates">Next trip · dates</label><input class="inp" id="c-trip_dates" data-cfg="trip_dates" value="${esc(CFG.trip_dates || '')}" placeholder="3 to 7 December"></div><div class="field"><label for="c-comm_link">WhatsApp community invite link</label><input class="inp" id="c-comm_link" data-cfg="comm_link" type="text" value="${esc(CFG.comm_link || '')}" placeholder="https://chat.whatsapp.com/..."></div><div class="field"><label for="c-pcap">Promotion sends per day</label><input class="inp num" type="number" id="c-pcap" data-cfg="pcap" value="${CFG.pcap || 30}"></div></div>${store && store.name === 'supabase' ? `<div class="fields" style="margin-top:14px"><div class="field"><label for="pw-new">App password (at least 8 characters)</label><input class="inp" type="password" id="pw-new" autocomplete="new-password"></div><div class="field" style="align-self:end"><button class="btn ink" data-setpw>Save password</button></div></div>` : ''}<div class="fields" style="grid-template-columns:1fr 1fr;margin-top:14px">${[['wa1n_en', 'New lead, missed call · EN'], ['wa1n_fr', 'New lead, missed call · FR'], ['wa0_en', 'New lead, no call yet · EN'], ['wa0_fr', 'New lead, no call yet · FR'], ['wa1_en', 'Old lead, missed call · EN'], ['wa1_fr', 'Old lead, missed call · FR'], ['wa2_en', 'No reply · EN'], ['wa2_fr', 'No reply · FR'], ['wa3_en', 'Went quiet, 7 days · EN'], ['wa3_fr', 'Went quiet, 7 days · FR'], ['wa4_en', 'Went quiet, close file · EN'], ['wa4_fr', 'Went quiet, close file · FR'], ['wa5_en', 'Reconnect, 3+ months · EN'], ['wa5_fr', 'Reconnect, 3+ months · FR'], ['wa6_en', 'Trip invite · EN'], ['wa6_fr', 'Trip invite · FR'], ['wa7_en', 'Reconfirm meeting · EN'], ['wa7_fr', 'Reconfirm meeting · FR'], ['wa1n_ar', 'New lead, missed call · AR'], ['wa0_ar', 'New lead, no call yet · AR'], ['wa1_ar', 'Old lead, missed call · AR'], ['wa2_ar', 'No reply · AR'], ['wa3_ar', 'Went quiet, 7 days · AR'], ['wa4_ar', 'Went quiet, close file · AR'], ['wa5_ar', 'Reconnect · AR'], ['wa6_ar', 'Trip invite · AR'], ['wa7_ar', 'Reconfirm meeting · AR'], ['wa8_en', 'Project promotion · EN'], ['wa8_fr', 'Project promotion · FR'], ['wa8_ar', 'Project promotion · AR'], ['wa9_en', 'Community invite · EN'], ['wa9_fr', 'Community invite · FR'], ['wa9_ar', 'Community invite · AR']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><textarea class="inp" id="c-${k}" data-cfg="${k}">${esc(CFG[k])}</textarea></div>`).join('')}</div></div>`;
 }
 
 // ---------- client sheet ----------
@@ -683,9 +747,16 @@ async function exportXlsx() {
 
 // ---------- clicks ----------
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-confirm],[data-meet],[data-call],[data-wa],[data-wa-after],[data-open],[data-log],[data-skip],[data-reply],[data-country],[data-filter],[data-more],[data-add],[data-close],[data-out],[data-temp],[data-savelog],[data-savesheet],[data-savephone],[data-phone],[data-vid],[data-market],[data-export],[data-report],[data-saveadd],[data-import]');
+  const el = e.target.closest('[data-promo],[data-aud],[data-pstart],[data-psend],[data-pstop],[data-pfilt],[data-setpw],[data-confirm],[data-meet],[data-call],[data-wa],[data-wa-after],[data-open],[data-log],[data-skip],[data-reply],[data-country],[data-filter],[data-more],[data-add],[data-close],[data-out],[data-temp],[data-savelog],[data-savesheet],[data-savephone],[data-phone],[data-vid],[data-market],[data-export],[data-report],[data-saveadd],[data-import]');
   if (!el) { if (e.target === $('#scrim')) hide(); return; }
   const d = el.dataset;
+  if (d.pfilt) { pFilt = d.pfilt; render(); return; }
+  if (d.promo) { openPromo(d.promo); return; }
+  if (d.aud) { const [k, v] = [d.aud[0], d.aud.slice(2)]; if (k === 'g') { AUD.gs.has(v) ? AUD.gs.delete(v) : AUD.gs.add(v); } else if (v === '*') AUD.cs.clear(); else { AUD.cs.has(v) ? AUD.cs.delete(v) : AUD.cs.add(v); } openPromo(AUD.pid); return; }
+  if (d.pstart) { const P = projOf(d.pstart), ids = audList().map(L => L.i); hide(); saveKv('promo', {on:1, pid:d.pstart, name:P.name, ids, sent:{}, start:todayStr()}); toast(`Promotion ready · ${ids.length} clients`); location.hash = '#projects'; return; }
+  if (d.psend) { const t = todayStr(), pr = KV.promo, L = byId(d.psend); if (!pr || !L) return; const s = stateOf(L); s.touches = (L.touches || 0) + 1; s.last = t; s.ev = [...s.ev, {d:t, ch:'wa', o:'promo', p:String(pr.pid)}].slice(-60); setTimeout(() => { saveKv('promo', {...pr, sent:{...(pr.sent || {}), [L.i]:t}}); save(L.i, s, 'Promotion sent'); }, 300); return; }
+  if (d.pstop !== undefined) { if (KV.promo) saveKv('promo', {...KV.promo, on:0}); toast('Promotion stopped'); return; }
+  if (d.setpw !== undefined) { const pw = $('#pw-new').value; if (pw.length < 8) { toast('Use at least 8 characters'); return; } store.sb.auth.updateUser({password:pw}).then(({error}) => { $('#pw-new').value = ''; toast(error ? error.message : 'Password saved. Use it to sign in on the Home Screen app.'); }); return; }
   if (d.confirm) { const L = byId(d.confirm), s = stateOf(L); s.meet = {...(s.meet || {}), confirmed:1}; save(L.i, s, 'Marked as reconfirmed'); return; }
   if (d.meet) { openMeet(d.meet); return; }
   if (d.call) { const id = d.call; setTimeout(() => openLog(id, 'call'), 400); return; }            // tel: opens the phone; the result sheet waits for you
@@ -750,7 +821,7 @@ async function doImport(f) {
   catch (e) { msg.textContent = 'That did not work: ' + (e.message || 'check the file and try again'); }
 }
 function vLogin() {
-  return `<div class="card login"><div class="logo" style="justify-content:center"><b style="color:var(--ink)">HAK</b><span>Client Desk</span></div><div class="h2">Sign in</div><div class="muted">We email you a sign-in link. Only your email can open your clients.</div><input class="inp" id="lg-email" type="email" placeholder="you@email.com" autocomplete="email"><button class="btn lg ink" id="lg-go">Email me the link</button><div class="muted" id="lg-msg"></div></div>`;
+  return `<div class="card login"><div class="logo" style="justify-content:center"><b style="color:var(--ink)">HAK</b><span>Client Desk</span></div><div class="h2">Sign in</div><input class="inp" id="lg-email" type="email" placeholder="you@email.com" autocomplete="username" value="themshakimi@gmail.com"><input class="inp" id="lg-pass" type="password" placeholder="Password" autocomplete="current-password"><button class="btn lg ink" id="lg-pw">Sign in</button><div class="muted" id="lg-msg" style="font-size:13px"></div><button class="btn" id="lg-go">No password yet? Email me a link</button><div class="muted" style="font-size:12.5px">Set a password once in Results › Settings. After that you stay signed in and never need an email link.</div></div>`;
 }
 
 // ---------- routing & boot ----------
@@ -761,11 +832,11 @@ setInterval(() => { clock(); if (store && store.ok && view === 'now' && !$('#she
 function syncNote(t) { SAVE_WARN = t; render(); }
 
 async function boot() {
-  clock();
+  clock(); loadProjects();
   if (CFGX && CFGX.supabaseUrl) {
     store = SupaStore;
     let r; try { r = await store.init(); } catch (e) { $('#main').innerHTML = '<div class="card login"><div class="h2">Could not connect</div><div class="muted">Check your internet connection, then reload.</div></div>'; return; }
-    if (r === 'login') { nav(); $('#main').innerHTML = vLogin(); $('#lg-go').onclick = async () => { const em = $('#lg-email').value.trim(); if (!em) return; const {error} = await store.sb.auth.signInWithOtp({email:em, options:{emailRedirectTo:location.origin + location.pathname, shouldCreateUser:true}}); $('#lg-msg').textContent = error ? error.message : 'Check your email and tap the link.'; }; return; }
+    if (r === 'login') { nav(); $('#main').innerHTML = vLogin(); const msg = t => { $('#lg-msg').textContent = t; }; $('#lg-pw').onclick = async () => { const em = $('#lg-email').value.trim(), pw = $('#lg-pass').value; if (!em || !pw) return msg('Enter your email and password.'); msg('Signing in…'); const {error} = await store.sb.auth.signInWithPassword({email:em, password:pw}); if (error) return msg('Wrong email or password. No password yet? Use the email link once, then set one in Results › Settings.'); location.reload(); }; $('#lg-pass').onkeydown = e => { if (e.key === 'Enter') $('#lg-pw').click(); }; $('#lg-go').onclick = async () => { const em = $('#lg-email').value.trim(); if (!em) return; const {error} = await store.sb.auth.signInWithOtp({email:em, options:{emailRedirectTo:location.origin + location.pathname, shouldCreateUser:false}}); msg(error ? (/rate/i.test(error.message) ? 'Too many emails this hour. Use your password, or try again in an hour.' : error.message) : 'Check your email and tap the link. On iPhone it opens in Safari: set your password there.'); }; return; }
     try { BASE = await store.base(); } catch (e) { $('#main').innerHTML = `<div class="card login"><div class="h2">Not allowed</div><div class="muted">This email cannot open the client list. Sign in with your own email.</div><button class="btn" onclick="location.reload()">Reload</button></div>`; return; }
     if (!BASE.length) { NEEDS_IMPORT = true; route(); return; }
   } else {
