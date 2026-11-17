@@ -692,7 +692,7 @@ function vLogin() {
 function route() { const h = (location.hash || '#now').slice(1); view = NAV.some(n => n[0] === h) ? h : 'now'; more = 0; hide(); render(); window.scrollTo(0, 0); }
 window.addEventListener('hashchange', route);
 const clock = () => { $('#clock').textContent = 'Dubai ' + hm('Asia/Dubai'); };
-setInterval(() => { clock(); if (view === 'now' && !$('#sheet').classList.contains('on') && document.activeElement?.tagName !== 'INPUT') render(); }, 60000);
+setInterval(() => { clock(); if (store && store.ok && view === 'now' && !$('#sheet').classList.contains('on') && document.activeElement?.tagName !== 'INPUT') render(); }, 60000);
 function syncNote(t) { SAVE_WARN = t; render(); }
 
 async function boot() {
