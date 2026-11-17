@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0B0C">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HAK">
+<title>Hak Client Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<style>
+/* Luxury desk: white paper, black ink, champagne gold. One theme by choice (light). Phone first: one client at a time. */
+:root{
+  --paper:#FFFFFF; --page:#F7F6F3; --ink:#0B0B0C; --ink2:#2A2A2D; --muted:#77736C; --line:#E9E6E0;
+  --gold:#B08D57; --gold2:#D7BE8E; --goldsoft:#F6F0E5;
+  --hot:#B42318; --hotsoft:#FCEBEA; --warn:#A86A08; --warnsoft:#FDF3E2; --ok:#1F7A4D; --oksoft:#E7F4EC; --wa:#1DA851;
+  --display:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --body:"Manrope", "Helvetica Neue", Arial, sans-serif;
+  --r:18px; --shadow:0 1px 2px rgba(11,11,12,.04), 0 10px 30px rgba(11,11,12,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--page);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance}
+/* header */
+.hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:20;padding:env(safe-area-inset-top) 0 0}
+.hin{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:20px}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo b{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:3px;color:#fff}
+.logo span{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold2)}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs a{padding:9px 16px;border-radius:30px;text-decoration:none;color:#BDB8AE;font-weight:700;font-size:14px}
+.tabs a.on{background:var(--gold);color:#0B0B0C}
+.clock{font-size:12px;color:#BDB8AE;white-space:nowrap}
+.gold-rule{height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 120px}
+/* bottom tabs (phone) */
+.btabs{display:none}
+/* generic */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:var(--paper);font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn svg{width:18px;height:18px}
+.btn.ink{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.gold{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn.wa{color:var(--wa);border-color:#BFE7CF;background:#F3FBF6}
+.btn.sm{height:36px;padding:0 13px;font-size:13px;border-radius:11px}
+.btn.lg{height:58px;font-size:17px;border-radius:16px;padding:0 24px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.chip:focus-visible,a:focus-visible,.row:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:30px;background:#F2F0EC;color:var(--ink2);white-space:nowrap}
+.pill.hot{background:var(--hotsoft);color:var(--hot)}.pill.warn{background:var(--warnsoft);color:var(--warn)}.pill.ok{background:var(--oksoft);color:var(--ok)}.pill.gold{background:var(--goldsoft);color:#8A6A36}
+.eyebrow{font-size:11px;letter-spacing:2.2px;text-transform:uppercase;color:var(--gold);font-weight:800}
+.muted{color:var(--muted)}
+.h1{font-family:var(--display);font-weight:600;font-size:40px;line-height:1.05;letter-spacing:-.3px}
+.h2{font-family:var(--display);font-weight:600;font-size:26px}
+.sec{display:flex;align-items:baseline;gap:12px;margin:30px 0 12px;flex-wrap:wrap}
+.sec .grow{flex:1}
+.flag{font-size:22px;line-height:1}
+/* call now */
+.greet{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.greet .grow{flex:1}
+.prog{display:flex;align-items:center;gap:12px;min-width:220px}
+.prog .bar{flex:1;height:8px;background:var(--line);border-radius:8px;overflow:hidden}
+.prog .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.focus{padding:28px;display:grid;grid-template-columns:1.2fr 1fr;gap:28px;position:relative;overflow:hidden}
+.focus:before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold))}
+.focus .who{display:flex;flex-direction:column;gap:10px;min-width:0}
+.focus .nm{font-family:var(--display);font-size:44px;font-weight:600;line-height:1;word-break:break-word}
+.focus .where{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink2);flex-wrap:wrap}
+.focus .why{background:var(--goldsoft);border-radius:14px;padding:14px 16px;font-size:14px;color:var(--ink2)}
+.focus .why b{display:block;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#8A6A36;margin-bottom:4px}
+.focus .act{display:flex;flex-direction:column;gap:12px;justify-content:center}
+.focus .act .btn{width:100%}
+.focus .phone{font-size:20px;font-weight:800;text-align:center;letter-spacing:.5px}
+.localtime{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:30px;padding:5px 12px;font-size:13px;font-weight:700}
+.localtime i{width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block}
+.next5{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px}
+.mini{flex:0 0 200px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.mini b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ask{display:flex;align-items:center;gap:14px;padding:14px 18px;flex-wrap:wrap;margin-bottom:10px;border-left:4px solid var(--wa)}
+.ask .grow{flex:1;min-width:180px}
+.quiet{padding:34px;text-align:center}
+.quiet .h2{margin-bottom:6px}
+/* clients */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:0 14px;height:46px}
+.search input{border:0;outline:0;background:transparent;width:100%}
+.ctry{display:flex;gap:8px;overflow-x:auto;padding:14px 2px 6px;scrollbar-width:none}
+.ctry::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--paper);border-radius:30px;padding:8px 14px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.chip .c{color:var(--muted);font-weight:600}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}.chip.on .c{color:var(--gold2)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;padding:6px 2px 14px}
+.filters .chip{padding:6px 12px;font-size:12.5px}
+.filters .chip.on{background:var(--gold);border-color:var(--gold);color:#fff}.filters .chip.on .c{color:#fff}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;cursor:pointer}
+.row:hover{border-color:var(--gold2)}
+.av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--goldsoft);color:#8A6A36;position:relative}
+.av.hot{box-shadow:0 0 0 2px var(--hot)}
+.row .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15.5px}
+.row .t span{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:3px}
+.row .acts{display:flex;gap:8px}
+.ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;border:1px solid var(--line);background:var(--paper);cursor:pointer;text-decoration:none}
+.ic svg{width:19px;height:19px}
+.ic.wa{color:var(--wa);background:#F3FBF6;border-color:#BFE7CF}
+.ic.ink{background:var(--ink);color:#fff;border-color:var(--ink)}
+.more{text-align:center;margin-top:12px}
+/* results */
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tile{padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.tile .v{font-family:var(--display);font-size:40px;font-weight:600;line-height:1}
+.tile .v small{font-family:var(--body);font-size:14px;color:var(--muted);font-weight:700}
+.dg{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:14px}
+.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.panel{padding:22px}
+.panel h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:16px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.money .amt{font-family:var(--display);font-size:60px;font-weight:600;line-height:1}
+.money .amt small{font-family:var(--body);font-size:16px;color:var(--muted)}
+.track{position:relative;height:14px;background:#EFEBE4;border-radius:14px;margin:18px 0 8px}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:14px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.track em{position:absolute;top:-7px;bottom:-7px;width:2px;background:var(--ink)}
+.legend{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.rings{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.ring{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:12.5px;font-weight:700;color:var(--muted)}
+.ring svg{width:100px;height:100px}
+.hb{display:flex;flex-direction:column;gap:10px}
+.hb .r{display:grid;grid-template-columns:140px 1fr 48px;gap:10px;align-items:center;font-size:13.5px}
+.hb .r .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.hb .b{height:10px;background:#F2EFE9;border-radius:10px;overflow:hidden}
+.hb .b i{display:block;height:100%;background:var(--ink);border-radius:10px}
+.hb .r b{text-align:right}
+.funnel{display:flex;flex-direction:column;gap:8px}
+.funnel .s{display:flex;align-items:center;gap:12px}
+.funnel .f{height:36px;border-radius:10px;background:var(--ink);color:var(--gold2);display:flex;align-items:center;padding:0 12px;font-weight:800;min-width:46px}
+.funnel span{font-size:13px;font-weight:600;color:var(--ink2)}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th{text-align:left;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--line)}
+table.t td{padding:11px 8px;border-bottom:1px solid var(--line)}
+.tw{overflow-x:auto}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800}
+.inp{height:46px;border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:0 13px;width:100%}
+textarea.inp{height:90px;padding:11px 13px;resize:vertical}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(11,11,12,.45);z-index:40;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;z-index:50;background:var(--page);display:none;flex-direction:column;overflow:hidden;
+  right:24px;top:24px;bottom:24px;width:min(500px,calc(100% - 48px));border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+.sheet.on{display:flex}
+.sh{background:var(--ink);color:#fff;padding:22px 24px 20px;position:relative}
+.sh .x{position:absolute;right:16px;top:16px;background:rgba(255,255,255,.1);border:0;color:#fff}
+.sh .nm{font-family:var(--display);font-size:32px;font-weight:600;line-height:1.05;padding-right:50px}
+.sh .sub{color:#BDB8AE;font-size:13px;margin-top:6px}
+.sb{padding:20px 24px 40px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.outs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.out{border:1px solid var(--line);background:var(--paper);border-radius:14px;padding:14px;text-align:left;cursor:pointer;font-weight:800;font-size:15px;display:flex;flex-direction:column;gap:3px;min-height:68px}
+.out span{font-weight:500;font-size:12px;color:var(--muted)}
+.out.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);background:var(--goldsoft)}
+.out.good{border-left:4px solid var(--ok)}.out.bad{border-left:4px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:none;padding:10px 16px;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--ink);color:#fff}
+.tl{display:flex;flex-direction:column;gap:12px;border-left:2px solid var(--line);padding-left:16px;margin-left:4px}
+.tl .e{position:relative;font-size:13.5px}
+.tl .e:before{content:"";position:absolute;left:-23px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--gold);border:2px solid var(--page)}
+.tl .e.old:before{background:var(--line)}
+.tl .e small{display:block;color:var(--muted)}
+.nextline{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;flex-wrap:wrap}
+.nextline .grow{flex:1}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 16px 13px 18px;border-radius:14px;font-weight:700;z-index:80;display:none;align-items:center;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:calc(100% - 24px)}
+.toast.on{display:flex}
+.toast button{background:none;border:0;color:var(--gold2);font-weight:800;cursor:pointer}
+.banner{background:var(--warnsoft);color:var(--warn);border-radius:14px;padding:12px 16px;font-weight:600;margin-bottom:16px}
+.login{max-width:420px;margin:12vh auto;padding:32px;text-align:center;display:flex;flex-direction:column;gap:14px}
+@media (max-width: 860px){
+  .tabs,.clock{display:none}
+  .hin{padding:12px 16px}
+  .wrap{padding:18px 14px 110px}
+  .btabs{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--ink);z-index:30;padding:8px 10px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;border-top:1px solid #222}
+  .btabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#9C978D;text-decoration:none;font-size:11.5px;font-weight:800;padding:6px;border-radius:12px}
+  .btabs a svg{width:22px;height:22px}
+  .btabs a.on{color:var(--gold2)}
+  .h1{font-size:32px}
+  .focus{grid-template-columns:1fr;padding:22px;gap:18px}
+  .focus .nm{font-size:36px}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{padding:14px}.tile .v{font-size:30px}
+  .s4,.s5,.s6,.s7,.s8{grid-column:span 12}
+  .rings{grid-template-columns:repeat(3,1fr)}
+  .hb .r{grid-template-columns:100px 1fr 40px}
+  .money .amt{font-size:46px}
+  .sheet{left:0;right:0;bottom:0;top:auto;width:100%;max-height:92%;border-radius:22px 22px 0 0}
+  .row .acts .ic{width:42px;height:42px}
+}
+@media (prefers-reduced-motion: no-preference){ .sheet.on{animation:up .22s ease} @keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}} }
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hin">
+  <div class="logo"><b>HAK</b><span>Client Desk</span></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="clock num" id="clock"></div>
+</div><div class="gold-rule"></div></header>
+<main class="wrap" id="main"></main>
+<nav class="btabs" id="btabs"></nav>
+<div class="scrim" id="scrim"></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true"></section>
+<div class="toast" id="toast"><span id="toastTxt"></span><button id="toastUndo" hidden>Undo</button></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Math.round(n || 0).toLocaleString('en-US');
+const I = {
+  call:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
+  wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1.1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.7-.3z"/></svg>',
+  now:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.8a3.4 3.4 0 0 1 0 6.4M18 14.6c1.9.7 3.1 2.5 3.5 5.4"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+  dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0l-4-4m4 4l4-4M4 20h16"/></svg>',
+  skip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l8 7-8 7M15 5v14"/></svg>',
+};
+const flag = cc => cc && /^[A-Z]{2}$/i.test(cc) ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '☎';
+const initials = n => (String(n || '?').replace(/[^\p{L}\s]/gu, ' ').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('') || '?').toUpperCase();
+const firstName = n => { const w = String(n || '').replace(/^(mr|mrs|dr|amb|lawyer)\.?\s+/i, '').trim().split(/\s+/)[0] || ''; return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); };
+
+// ---------- time ----------
+const partsIn = tz => { const p = new Intl.DateTimeFormat('en-CA', {timeZone:tz, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', weekday:'short', hour12:false}).formatToParts(new Date()); const g = t => (p.find(x => x.type === t) || {}).value; return {date:`${g('year')}-${g('month')}-${g('day')}`, h:+g('hour') % 24, m:+g('minute'), wd:g('weekday')}; };
+const todayStr = () => partsIn('Asia/Dubai').date;
+const hm = tz => new Intl.DateTimeFormat('en-GB', {timeZone:tz, hour:'2-digit', minute:'2-digit'}).format(new Date());
+const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const dStr = d => d.toISOString().slice(0, 10);
+const addDays = (s, n) => { const d = parseD(s); d.setUTCDate(d.getUTCDate() + n); return dStr(d); };
+const addWorkdays = (s, n) => { const d = parseD(s); while ([0, 6].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1); let k = n; while (k > 0) { d.setUTCDate(d.getUTCDate() + 1); if (![0, 6].includes(d.getUTCDay())) k--; } return dStr(d); };
+const monday = s => { const d = parseD(s); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return dStr(d); };
+const nice = s => { if (!s) return ''; const t = todayStr(); if (s === t) return 'today'; if (s === addDays(t, 1)) return 'tomorrow'; if (s < t) { const n = Math.round((parseD(t) - parseD(s)) / 864e5); return n + (n === 1 ? ' day late' : ' days late'); } return parseD(s).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}); };
+const monthStart = s => s.slice(0, 8) + '01';
+const monthEnd = s => { const d = parseD(monthStart(s)); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCDate(0); return dStr(d); };
+
+// ---------- countries & time zones ----------
+const TZ = {AE:'Asia/Dubai', SA:'Asia/Riyadh', KW:'Asia/Kuwait', QA:'Asia/Qatar', BH:'Asia/Bahrain', OM:'Asia/Muscat', IQ:'Asia/Baghdad', JO:'Asia/Amman', LB:'Asia/Beirut', PS:'Asia/Gaza', YE:'Asia/Aden', SY:'Asia/Damascus', IN:'Asia/Kolkata', PK:'Asia/Karachi', BD:'Asia/Dhaka', LK:'Asia/Colombo', NP:'Asia/Kathmandu', MV:'Indian/Maldives', IR:'Asia/Tehran', TR:'Europe/Istanbul', RU:'Europe/Moscow', AZ:'Asia/Baku', KZ:'Asia/Almaty', CN:'Asia/Shanghai', HK:'Asia/Hong_Kong', SG:'Asia/Singapore', MY:'Asia/Kuala_Lumpur', JP:'Asia/Tokyo', KR:'Asia/Seoul', AU:'Australia/Sydney', NG:'Africa/Lagos', GH:'Africa/Accra', KE:'Africa/Nairobi', UG:'Africa/Kampala', ZA:'Africa/Johannesburg', MA:'Africa/Casablanca', DZ:'Africa/Algiers', TN:'Africa/Tunis', EG:'Africa/Cairo', SD:'Africa/Khartoum', SN:'Africa/Dakar', CI:'Africa/Abidjan', CM:'Africa/Douala', TD:'Africa/Ndjamena', MU:'Indian/Mauritius', GB:'Europe/London', IE:'Europe/Dublin', FR:'Europe/Paris', BE:'Europe/Brussels', NL:'Europe/Amsterdam', LU:'Europe/Luxembourg', DE:'Europe/Berlin', CH:'Europe/Zurich', AT:'Europe/Vienna', IT:'Europe/Rome', ES:'Europe/Madrid', PT:'Europe/Lisbon', SE:'Europe/Stockholm', NO:'Europe/Oslo', DK:'Europe/Copenhagen', FI:'Europe/Helsinki', PL:'Europe/Warsaw', RO:'Europe/Bucharest', GR:'Europe/Athens', HR:'Europe/Zagreb', AL:'Europe/Tirane', MT:'Europe/Malta', LV:'Europe/Riga', EE:'Europe/Tallinn', US:'America/New_York', CA:'America/Toronto', MX:'America/Mexico_City', BR:'America/Sao_Paulo', CR:'America/Costa_Rica', PF:'Pacific/Tahiti'};
+const WEST = '206 209 213 253 310 323 341 360 408 415 424 425 442 503 509 510 530 541 559 562 619 626 628 650 657 661 669 702 707 714 725 747 760 775 805 818 831 858 909 916 925 949 951 971 604 778 236 250 672'.split(' ');
+const MOUNTAIN = '303 385 435 480 520 602 623 719 720 801 928 403 587 780 825 368'.split(' ');
+const CENTRAL = '205 210 214 217 224 225 251 254 262 281 309 312 314 316 318 319 320 331 334 337 346 361 402 405 409 414 417 430 432 469 479 501 504 507 512 515 563 573 601 608 612 615 618 630 636 641 651 662 682 708 712 713 715 731 737 763 773 779 785 806 815 816 817 830 832 847 870 872 901 903 913 915 918 920 936 940 952 956 972 979 204 431 306 639'.split(' ');
+function tzOf(L) {
+  if (!L.p) return null;
+  if (L.cc === 'US' || L.cc === 'CA') { const ac = L.p.replace(/\D/g, '').slice(1, 4); if (WEST.includes(ac)) return 'America/Los_Angeles'; if (MOUNTAIN.includes(ac)) return 'America/Denver'; if (CENTRAL.includes(ac)) return 'America/Chicago'; return 'America/New_York'; }
+  return TZ[L.cc] || ({m:'Asia/Kolkata', a:'Africa/Lagos', e:'America/New_York'})[L.b] || null;
+}
+const DIAL = [['971', 'AE', 'm'], ['966', 'SA', 'm'], ['965', 'KW', 'm'], ['974', 'QA', 'm'], ['973', 'BH', 'm'], ['968', 'OM', 'm'], ['964', 'IQ', 'm'], ['962', 'JO', 'm'], ['961', 'LB', 'm'], ['970', 'PS', 'm'], ['91', 'IN', 'm'], ['92', 'PK', 'm'], ['880', 'BD', 'm'], ['94', 'LK', 'm'], ['98', 'IR', 'm'], ['90', 'TR', 'm'], ['7', 'RU', 'm'], ['994', 'AZ', 'm'], ['86', 'CN', 'm'], ['852', 'HK', 'm'], ['65', 'SG', 'm'], ['60', 'MY', 'm'], ['61', 'AU', 'm'], ['81', 'JP', 'm'], ['82', 'KR', 'm'], ['234', 'NG', 'a'], ['233', 'GH', 'a'], ['254', 'KE', 'a'], ['256', 'UG', 'a'], ['27', 'ZA', 'a'], ['212', 'MA', 'a'], ['213', 'DZ', 'a'], ['216', 'TN', 'a'], ['20', 'EG', 'a'], ['221', 'SN', 'a'], ['225', 'CI', 'a'], ['237', 'CM', 'a'], ['44', 'GB', 'a'], ['33', 'FR', 'a'], ['32', 'BE', 'a'], ['41', 'CH', 'a'], ['49', 'DE', 'a'], ['31', 'NL', 'a'], ['39', 'IT', 'a'], ['34', 'ES', 'a'], ['351', 'PT', 'a'], ['353', 'IE', 'a'], ['43', 'AT', 'a'], ['46', 'SE', 'a'], ['47', 'NO', 'a'], ['45', 'DK', 'a'], ['48', 'PL', 'a'], ['30', 'GR', 'a'], ['1', 'US', 'e'], ['52', 'MX', 'e'], ['55', 'BR', 'e']];
+const CA_AC = '204 226 236 249 250 289 306 343 365 403 416 418 431 437 438 450 506 514 519 548 579 581 587 604 613 639 647 672 705 709 778 780 782 807 819 825 867 873 902 905'.split(' ');
+const regionName = cc => { try { return new Intl.DisplayNames(['en'], {type:'region'}).of(cc); } catch (e) { return cc; } };
+function fromPhone(p) { const d = String(p || '').replace(/\D/g, ''); const hit = DIAL.filter(x => d.startsWith(x[0])).sort((a, b) => b[0].length - a[0].length)[0]; if (!hit) return null; let cc = hit[1]; if (hit[0] === '1' && CA_AC.includes(d.slice(1, 4))) cc = 'CA'; return {cc, c:regionName(cc), b:hit[2]}; }
+const FR_CC = ['FR', 'BE', 'MA', 'DZ', 'TN', 'PF', 'CI', 'SN', 'CM', 'TD', 'LU', 'MU'];
+
+// ---------- settings ----------
+const DEF = {calls:10, conv:60, meet:15, offer:6, deal:3, budget:166667, stretch:250000, videos:2, qm:4, qa:4, qe:2, start:'2026-11-17',
+  wa1_en:"Hi {name}, Hak here from Dubai. Just tried calling you. Nothing urgent, I wanted to check if you're still looking at property here, because a lot has changed. If you are, I'll give you my honest view on what's worth it and what isn't. When's a good time to talk?",
+  wa2_en:"{name}, quick one. I came across something that made me think of you. Should I send it over, or are you not looking anymore? Either answer is fine.",
+  wa1_fr:"Bonjour {name}, c'est Hak, de Dubaï. J'ai essayé de vous appeler. Rien d'urgent : je voulais savoir si vous cherchez toujours un bien ici, parce que le marché a beaucoup bougé. Si oui, je vous donne mon avis honnête sur ce qui vaut le coup et ce qui ne le vaut pas. Quand est-ce que je peux vous appeler ?",
+  wa2_fr:"{name}, petite question. J'ai vu quelque chose qui m'a fait penser à vous. Je vous l'envoie, ou vous ne cherchez plus ? Les deux réponses me vont."};
+const CAD = [0, 3, 7, 7, 14, 30, 60, 90, 90];
+const STATUSES = ['New', 'No answer', 'Contacted', 'Warm', 'Hot', 'Meeting set', 'Offer/EOI sent', 'Closed won', 'Past client', 'Not now', 'Dead'];
+const ST_CLS = {Hot:'hot', 'Meeting set':'warn', 'Offer/EOI sent':'warn', 'Closed won':'ok', 'Past client':'ok', Warm:'gold'};
+const OLD = {Hot:['Was in a deal', 'hot'], 'Past client':['Past client', 'ok'], Warm:['Warm before', 'gold'], Owner:['DAMAC owner', ''], New:['Never called', ''], Cold:['Cold', ''], 'No answer':['No answer before', ''], Review:['Unknown WhatsApp', ''], Dead:['Archived', '']};
+const ACTIVE = L => !['Dead', 'Closed won', 'Not now'].includes(L.status);
+const HOTSET = ['Hot', 'Meeting set', 'Offer/EOI sent'];
+
+// ---------- storage adapters ----------
+// Two homes for the same app: claude.ai (built-in db) or your own hosting (Supabase).
+const CFGX = window.HAK_CONFIG || null;
+let store = null;
+const ArtifactStore = {
+  name:'claude', ok:false,
+  async init() { try { this.db = await window.claude.use('db'); } catch (e) { this.db = null; } this.ok = !!this.db; return this.ok; },
+  async base() { const r = await fetch('leads.json'); return r.json(); },
+  watch(onState, onAdded, onKv) {
+    const err = () => syncNote('Sync stopped. Reload the page.');
+    this.db.collection('state').onSnapshot(s => { const o = {}; s.docs.forEach(d => o[d.id] = d.data()); onState(o, !s.metadata.fromCache); }, err);
+    this.db.collection('added').onSnapshot(s => { const o = {}; s.docs.forEach(d => o[d.id] = d.data()); onAdded(o); }, err);
+    this.db.collection('kv').onSnapshot(s => { const o = {}; s.docs.forEach(d => o[d.id] = d.data()); onKv(o); }, err);
+  },
+  saveState(id, s) { return this.db.doc('state/' + id).set(s); },
+  addLead(b) { return this.db.doc('added/' + b.i).set(b); },
+  saveKv(k, v) { return this.db.doc('kv/' + k).set(v); },
+  clearState(id) { return this.db.doc('state/' + id).delete(); },
+};
+const SupaStore = {
+  name:'supabase', ok:false,
+  async init() {
+    await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    this.sb = window.supabase.createClient(CFGX.supabaseUrl, CFGX.supabaseKey);
+    const {data} = await this.sb.auth.getSession();
+    if (!data.session) return 'login';
+    this.ok = true; return true;
+  },
+  async base() {
+    const out = []; let from = 0;
+    while (true) { const {data, error} = await this.sb.from('leads').select('id,data,state').range(from, from + 999); if (error) throw error; out.push(...data); if (data.length < 1000) break; from += 1000; }
+    this._rows = out; return out.filter(r => !r.data.added).map(r => r.data);
+  },
+  watch(onState, onAdded, onKv) {
+    const load = async () => {
+      const st = {}, ad = {}; (this._rows || []).forEach(r => { if (r.state) st[r.id] = r.state; if (r.data.added) ad[r.id] = r.data; });
+      onState(st, true); onAdded(ad);
+      const {data} = await this.sb.from('kv').select('key,value'); const kv = {}; (data || []).forEach(r => kv[r.key] = r.value); onKv(kv);
+    };
+    load();
+    document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible') { try { await this.base(); load(); } catch (e) {} } });
+  },
+  async saveState(id, s) { const {error} = await this.sb.from('leads').update({state:s, updated_at:new Date().toISOString()}).eq('id', id); if (error) throw error; },
+  async addLead(b) { const {error} = await this.sb.from('leads').insert({id:b.i, data:{...b, added:true}}); if (error) throw error; },
+  async saveKv(k, v) { const {error} = await this.sb.from('kv').upsert({key:k, value:v}); if (error) throw error; },
+  async clearState(id) { const {error} = await this.sb.from('leads').update({state:null}).eq('id', id); if (error) throw error; },
+  async importAll(list, onProg) { for (let i = 0; i < list.length; i += 400) { const chunk = list.slice(i, i + 400).map(b => ({id:b.i, data:b})); const {error} = await this.sb.from('leads').upsert(chunk); if (error) throw error; onProg(Math.min(list.length, i + 400)); } },
+};
+
+// ---------- app state ----------
+let BASE = [], ADDED = {}, STATE = {}, KV = {}, CFG = {...DEF};
+let view = 'now', country = 'All', filt = 'All', query = '', more = 0, sheetId = null;
+const skipped = new Set();
+let LOG = null;
+
+function merge(b) {
+  const s = STATE[b.i] || {};
+  const p = s.phone || b.p || '';
+  let geo = {c:b.c, cc:b.cc, b:b.b};
+  if (s.phone && s.phone !== b.p) geo = fromPhone(s.phone) || geo;
+  const status = s.status || b.st || (b.arch ? 'Dead' : 'New');
+  const L = {...b, ...geo, p, name:s.name || b.n, status, touches:s.touches || 0, last:s.last || '', note:s.note || '', step:s.step || '', ev:s.ev || [], has:!!STATE[b.i]};
+  L.noPhone = !p;
+  L.planned = (!L.has && b.q && L.b && L.b !== 'x' && !b.arch) ? addWorkdays(CFG.start, Math.floor((b.q - 1) / (CFG['q' + L.b] || 4))) : '';
+  L.due = (b.arch || !ACTIVE(L) || L.noPhone) ? null : (L.has ? (s.next || null) : (L.planned || null));
+  return L;
+}
+const all = () => [...BASE.filter(b => !b.arch), ...Object.values(ADDED)].map(merge);
+const byId = id => { const b = BASE.find(x => x.i === id) || ADDED[id]; return b ? merge(b) : null; };
+const isDue = L => L.due && L.due <= todayStr();
+const hotScore = L => L.s + (HOTSET.includes(L.status) ? 60 : L.status === 'Warm' ? 30 : 0) + (L.due && L.due < todayStr() ? 25 : 0);
+
+// can I call them now? their local time between 9:00 and 20:00, not Sunday for Gulf? keep simple
+function callableNow(L) { const tz = tzOf(L); if (!tz) return false; const {h} = partsIn(tz); return h >= 9 && h < 20; }
+
+// ---------- KPIs (from logged activity) ----------
+function events() { const out = []; for (const [id, s] of Object.entries(STATE)) (s.ev || []).forEach(e => out.push({...e, id})); return out; }
+function kpis(from, to) {
+  const k = {calls:0, msgs:0, conv:0, meet:0, offer:0, deal:0, comm:0};
+  for (const e of events()) { if (e.d < from || e.d > to) continue; if (e.ch === 'call') k.calls++; else k.msgs++; if (['talk', 'meet', 'offer', 'deal'].includes(e.o)) k.conv++; if (e.o === 'meet') k.meet++; if (e.o === 'offer') k.offer++; if (e.o === 'deal') { k.deal++; k.comm += +e.amt || 0; } }
+  return k;
+}
+function weeks(n) { const w0 = monday(todayStr()), out = []; for (let i = n - 1; i >= 0; i--) { const s = addDays(w0, -7 * i); out.push({w:s, ...kpis(s, addDays(s, 6))}); } return out; }
+const videosWeek = w => { let v = 0; for (let i = 0; i < 7; i++) v += +((KV['day-' + addDays(w, i)] || {}).videos) || 0; return v; };
+
+// ---------- WhatsApp message ----------
+function waText(L) { const fr = FR_CC.includes(L.cc); const second = (L.ev || []).some(e => e.ch === 'wa'); const t = CFG[(second ? 'wa2_' : 'wa1_') + (fr ? 'fr' : 'en')]; return t.replace(/\{name\}/g, firstName(L.name)); }
+const waLink = L => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(waText(L))}`;
+
+// ---------- render ----------
+const NAV = [['now', 'Call now', 'now'], ['clients', 'Clients', 'people'], ['results', 'Results', 'chart']];
+function nav() {
+  $('#tabs').innerHTML = NAV.map(([k, t]) => `<a href="#${k}" class="${view === k ? 'on' : ''}">${t}</a>`).join('');
+  $('#btabs').innerHTML = NAV.map(([k, t, i]) => `<a href="#${k}" class="${view === k ? 'on' : ''}">${I[i]}${t}</a>`).join('');
+}
+function render() {
+  nav();
+  const m = $('#main');
+  if (NEEDS_IMPORT) { m.innerHTML = vImport(); return; }
+  m.innerHTML = (SAVE_WARN ? `<div class="banner">${SAVE_WARN}</div>` : '') + (view === 'clients' ? vClients() : view === 'results' ? vResults() : vNow());
+  const q = $('#q'); if (q) q.oninput = e => { query = e.target.value; more = 0; clearTimeout(render.t); render.t = setTimeout(() => { const pos = e.target.selectionStart; render(); const n = $('#q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 200); };
+}
+
+// ---------- CALL NOW ----------
+function nowQueue() {
+  const L = all().filter(x => x.p && ACTIVE(x) && !skipped.has(x.i));
+  const due = L.filter(isDue).filter(callableNow).sort((a, b) => hotScore(b) - hotScore(a));
+  const ahead = due.length ? [] : L.filter(x => !isDue(x) && x.due && callableNow(x)).sort((a, b) => a.due.localeCompare(b.due) || hotScore(b) - hotScore(a)).slice(0, 12);
+  return {due, ahead};
+}
+function pendingReplies() {
+  const t = todayStr();
+  return all().filter(L => { const e = L.ev[L.ev.length - 1]; return e && e.ch === 'wa' && e.o === 'sent' && e.d < t && e.d >= addDays(t, -10) && !e.checked && ACTIVE(L); }).slice(0, 5);
+}
+function opensNext() {
+  // when does the next market open (9:00 local) among due leads
+  const d = all().filter(x => x.p && ACTIVE(x) && isDue(x) && !callableNow(x));
+  const groups = {};
+  d.forEach(L => { const tz = tzOf(L); if (!tz) return; const {h, m} = partsIn(tz); const mins = h < 9 ? (9 - h) * 60 - m : (24 - h + 9) * 60 - m; const k = L.c; if (!groups[k] || groups[k].mins > mins) groups[k] = {c:L.c, cc:L.cc, mins, n:0}; groups[k].n++; });
+  return Object.values(groups).sort((a, b) => a.mins - b.mins).slice(0, 3);
+}
+function vNow() {
+  const t = todayStr(), {h} = partsIn('Asia/Dubai');
+  const td = kpis(t, t), {due, ahead} = nowQueue(), asks = pendingReplies();
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const list = due.length ? due : ahead;
+  const F = list[0];
+  const dueAll = all().filter(x => x.p && ACTIVE(x) && isDue(x)).length;
+  let html = `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', timeZone:'UTC'})} · Dubai ${hm('Asia/Dubai')}</div><h1 class="h1">${greet}, Hak</h1></div><div class="grow"></div>
+    <div class="prog"><span class="num" style="font-weight:800">${td.calls} / ${CFG.calls} calls</span><span class="bar"><i style="width:${Math.min(100, td.calls / CFG.calls * 100)}%"></i></span></div></div>`;
+  if (asks.length) html += `<div class="sec" style="margin-top:6px"><span class="eyebrow">First, quick answers</span></div>` + asks.map(L => `<div class="card ask"><div class="flag">${flag(L.cc)}</div><div class="grow"><b>Did ${esc(L.name)} reply on WhatsApp?</b><div class="muted" style="font-size:13px">Message sent ${nice(L.ev[L.ev.length - 1].d) === 'today' ? 'today' : parseD(L.ev[L.ev.length - 1].d).toLocaleDateString('en-GB', {weekday:'long', timeZone:'UTC'})}</div></div><button class="btn sm ink" data-reply="${L.i}:1">Yes, replied</button><button class="btn sm" data-reply="${L.i}:0">No reply</button></div>`).join('');
+  if (F) {
+    const tz = tzOf(F), old = OLD[F.t] || ['', ''];
+    const why = F.step ? ['Next step', F.step] : F.note ? ['Last note', F.note] : F.o ? ['From your files', F.o] : F.h ? ['History', F.h] : ['First call', 'No history. Use your new-lead opener: ask what it is for (live, invest, visa) and the budget.'];
+    html += `<div class="sec" style="margin-top:${asks.length ? 26 : 6}px"><span class="eyebrow">${due.length ? 'Call now · ' + due.length + ' due and awake' : 'Nobody due is awake right now · get ahead'}</span></div>
+    <div class="card focus"><div class="who">
+      <div class="where"><span class="flag">${flag(F.cc)}</span>${esc(F.c || '')} ${tz ? `<span class="localtime"><i></i>${hm(tz)} there</span>` : ''}</div>
+      <div class="nm">${esc(F.name)}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${F.has ? `<span class="pill ${ST_CLS[F.status] || ''}">${esc(F.status)}</span>` : `<span class="pill ${old[1]}">${old[0]}</span>`}${F.due && F.due < t ? `<span class="pill hot">${nice(F.due)}</span>` : ''}${F.bud ? `<span class="pill gold">AED ${fmt(F.bud)}</span>` : ''}${F.touches ? `<span class="pill">Touch ${F.touches + 1}</span>` : ''}</div>
+      <div class="why"><b>${why[0]}</b>${esc(String(why[1]).slice(0, 260))}</div>
+    </div><div class="act">
+      <div class="phone num">${esc(F.p)}</div>
+      <a class="btn lg ink" href="tel:${esc(F.p)}" data-call="${F.i}">${I.call}Call ${esc(firstName(F.name))}</a>
+      <a class="btn lg wa" href="${waLink(F)}" target="_blank" rel="noopener" data-wa="${F.i}">${I.wa}WhatsApp</a>
+      <div style="display:flex;gap:10px"><button class="btn" style="flex:1" data-open="${F.i}">Open file</button><button class="btn" style="flex:1" data-skip="${F.i}">${I.skip}Skip</button></div>
+    </div></div>`;
+    if (list.length > 1) html += `<div class="sec"><span class="eyebrow">Up next</span><span class="muted" style="font-size:13px">${list.length - 1} more</span></div><div class="next5">${list.slice(1, 9).map(L => `<div class="card mini" data-open="${L.i}"><span class="muted" style="font-size:12px">${flag(L.cc)} ${esc(L.c || '')} · ${tzOf(L) ? hm(tzOf(L)) : ''}</span><b>${esc(L.name)}</b><span><span class="pill ${ST_CLS[L.status] || (OLD[L.t] || [])[1] || ''}">${L.has ? esc(L.status) : (OLD[L.t] || [L.status])[0]}</span></span></div>`).join('')}</div>`;
+  } else {
+    const nx = opensNext();
+    html += `<div class="card quiet"><div class="h2">${dueAll ? 'Everyone due is asleep right now' : 'You are clear. Nothing due.'}</div><div class="muted">${nx.length ? nx.map(g => `${flag(g.cc)} ${esc(g.c)} opens in ${Math.floor(g.mins / 60)}h ${g.mins % 60}m (${g.n} due)`).join(' · ') : 'Add a client, or film today\'s videos.'}</div></div>`;
+  }
+  const miss = all().filter(L => L.noPhone && L.t !== 'Review').sort((a, b) => b.s - a.s);
+  if (miss.length) html += `<div class="sec"><span class="eyebrow">Missing numbers · ${miss.length}</span><span class="muted" style="font-size:13px">Add them from your phone</span></div><div class="list">${miss.slice(0, 6).map(row).join('')}</div>`;
+  return html;
+}
+
+// ---------- CLIENTS ----------
+const FILTERS = {All:L => true, 'Due':L => isDue(L), 'Hot':L => HOTSET.includes(L.status) || (!L.has && L.t === 'Hot'), 'Warm':L => L.status === 'Warm' || (!L.has && L.t === 'Warm'), 'Never called':L => !L.has, 'No answer':L => L.status === 'No answer', 'Parked':L => !ACTIVE(L) || L.status === 'Past client', 'No number':L => L.noPhone};
+function row(L) {
+  const old = OLD[L.t] || ['', ''];
+  const st = L.has || L.st ? `<span class="pill ${ST_CLS[L.status] || ''}">${esc(L.status)}</span>` : `<span class="pill ${old[1]}">${old[0]}</span>`;
+  const due = isDue(L) ? `<span class="pill ${L.due < todayStr() ? 'hot' : 'warn'}">${L.due < todayStr() ? nice(L.due) : 'Due today'}</span>` : L.due ? `<span class="pill">${nice(L.due)}</span>` : '';
+  return `<div class="card row" data-open="${L.i}" tabindex="0"><div class="av ${HOTSET.includes(L.status) || (!L.has && L.t === 'Hot') ? 'hot' : ''}">${esc(initials(L.name))}</div>
+  <div class="t"><b>${esc(L.name)}</b><span>${flag(L.cc)} ${esc(L.c || '')} ${st} ${due}</span></div>
+  <div class="acts">${L.p ? `<a class="ic" href="tel:${esc(L.p)}" data-call="${L.i}" aria-label="Call">${I.call}</a><a class="ic wa" href="${waLink(L)}" target="_blank" rel="noopener" data-wa="${L.i}" aria-label="WhatsApp">${I.wa}</a>` : `<button class="btn sm gold" data-phone="${L.i}">Add number</button>`}</div></div>`;
+}
+function countryList(leads) { const m = {}; leads.forEach(L => { const k = L.c || 'No number yet'; m[k] = m[k] || {c:k, cc:L.cc, n:0}; m[k].n++; }); return Object.values(m).sort((a, b) => b.n - a.n); }
+function vClients() {
+  const leads = all();
+  const cs = countryList(leads);
+  let inC = country === 'All' ? leads : country === 'Archive' ? BASE.filter(b => b.arch).map(merge) : leads.filter(L => (L.c || 'No number yet') === country);
+  const counts = Object.fromEntries(Object.entries(FILTERS).map(([k, f]) => [k, inC.filter(f).length]));
+  let list = inC.filter(FILTERS[filt] || FILTERS.All);
+  if (query) { const q = query.toLowerCase().replace(/\s/g, ''), qd = q.replace(/\D/g, ''); list = list.filter(L => (L.name || '').toLowerCase().replace(/\s/g, '').includes(q) || (qd.length > 3 && (L.p || '').replace(/\D/g, '').includes(qd))); }
+  list.sort((a, b) => (isDue(b) - isDue(a)) || hotScore(b) - hotScore(a));
+  const lim = 40 + more;
+  return `<div class="greet"><div><div class="eyebrow">${leads.length.toLocaleString()} clients · ${cs.length} countries</div><h1 class="h1">${country === 'All' ? 'All clients' : country === 'Archive' ? 'Archive' : flag(cs.find(c => c.c === country)?.cc) + ' ' + esc(country)}</h1></div></div>
+  <div class="toolbar"><label class="search">${I.search}<input id="q" placeholder="Search a name or number" value="${esc(query)}" aria-label="Search"></label><button class="btn ink" data-add>${I.plus}Add client</button></div>
+  <div class="ctry"><button class="chip ${country === 'All' ? 'on' : ''}" data-country="All">All <span class="c num">${leads.length}</span></button>${cs.map(c => `<button class="chip ${country === c.c ? 'on' : ''}" data-country="${esc(c.c)}">${c.c === 'No number yet' ? '☎' : flag(c.cc)} ${esc(c.c)} <span class="c num">${c.n}</span></button>`).join('')}<button class="chip ${country === 'Archive' ? 'on' : ''}" data-country="Archive">Archive <span class="c num">${BASE.filter(b => b.arch).length}</span></button></div>
+  <div class="filters">${Object.keys(FILTERS).map(k => `<button class="chip ${filt === k ? 'on' : ''}" data-filter="${k}">${k} <span class="c num">${counts[k]}</span></button>`).join('')}</div>
+  <div class="list">${list.length ? list.slice(0, lim).map(row).join('') : '<div class="card quiet"><div class="h2">No one here</div><div class="muted">Try another country or filter.</div></div>'}</div>
+  ${list.length > lim ? `<div class="more"><button class="btn" data-more>Show more · ${list.length - lim} left</button></div>` : ''}`;
+}
+
+// ---------- RESULTS ----------
+function ring(v, max, label) {
+  const p = Math.max(0, Math.min(1, max ? v / max : 0)), C = 2 * Math.PI * 40, col = p >= 1 ? 'var(--ok)' : 'var(--gold)';
+  return `<div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EFEBE4" stroke-width="8"/><circle cx="50" cy="50" r="40" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C * p} ${C}" transform="rotate(-90 50 50)"/><text x="50" y="52" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="30" font-weight="700" fill="var(--ink)">${fmt(v)}</text><text x="50" y="68" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="Manrope, Arial">of ${fmt(max)}</text></svg>${label}</div>`;
+}
+function vResults() {
+  const t = todayStr(), mo = kpis(monthStart(t), monthEnd(t)), wk = kpis(monday(t), t), td = kpis(t, t), leads = all();
+  const day = KV['day-' + t] || {};
+  const status = mo.comm >= CFG.stretch ? ['Stretch hit', 'ok'] : mo.comm >= CFG.budget ? ['On budget', 'ok'] : ['Below budget', 'hot'];
+  const ws = weeks(8), wt = CFG.calls * 5, maxW = Math.max(wt, ...ws.map(w => w.calls), 1), W = 600, H = 180, bw = W / 8;
+  const byS = STATUSES.map(s => [s, leads.filter(L => L.status === s).length]).filter(x => x[1]), maxS = Math.max(1, ...byS.map(x => x[1]));
+  const cs = countryList(leads).filter(c => c.c !== 'No number yet').slice(0, 8), maxC = Math.max(1, ...cs.map(c => c.n));
+  const funnel = [['Clients', leads.length], ['Worked so far', leads.filter(L => L.has).length], ['Conversations this month', mo.conv], ['Meetings this month', mo.meet], ['Offers / EOIs this month', mo.offer], ['Deals this month', mo.deal]], fmax = Math.max(1, ...funnel.map(f => f[1]));
+  const over = leads.filter(L => L.due && L.due < t).length;
+  return `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {month:'long', year:'numeric', timeZone:'UTC'})}</div><h1 class="h1">Results</h1></div><div class="grow"></div><button class="btn" data-report>Copy Friday report</button><button class="btn ink" data-export>${I.dl}Export to Excel</button></div>
+  <div class="tiles">
+    <div class="card tile"><span class="eyebrow">Calls today</span><span class="v num">${td.calls}<small> / ${CFG.calls}</small></span><span class="muted" style="font-size:12.5px">${td.msgs} WhatsApps sent</span></div>
+    <div class="card tile"><span class="eyebrow">Overdue</span><span class="v num" style="color:${over ? 'var(--hot)' : 'var(--ok)'}">${over}</span><span class="muted" style="font-size:12.5px">Your standard: zero</span></div>
+    <div class="card tile"><span class="eyebrow">Videos today</span><span class="v num">${+day.videos || 0}<small> / ${CFG.videos}</small></span><span style="display:flex;gap:8px"><button class="btn sm" data-vid="-1" aria-label="Remove a video">−</button><button class="btn sm gold" data-vid="1">+1 video</button></span></div>
+    <div class="card tile"><span class="eyebrow">6:30 market check</span><span class="v">${day.market ? 'Done' : 'Not yet'}</span><button class="btn sm ${day.market ? '' : 'ink'}" data-market>${day.market ? 'Undo' : 'Mark done'}</button></div>
+  </div>
+  <div class="dg">
+    <div class="card panel s7 money"><h3><span>Commission this month</span><span class="pill ${status[1]}">${status[0]}</span></h3>
+      <div class="amt num">${fmt(mo.comm)} <small>AED</small></div>
+      <div class="track"><i style="width:${Math.min(100, mo.comm / CFG.stretch * 100)}%"></i><em style="left:${CFG.budget / CFG.stretch * 100}%"></em></div>
+      <div class="legend num"><span>0</span><span>Budget ${fmt(CFG.budget)}</span><span>Stretch ${fmt(CFG.stretch)}</span></div>
+      <div class="muted" style="margin-top:12px;font-size:13.5px">${mo.deal} of ${CFG.deal} deals · ${fmt(Math.max(0, CFG.budget - mo.comm))} AED to budget</div></div>
+    <div class="card panel s5"><h3>This week</h3><div class="hb">
+      ${[['Calls', wk.calls, wt], ['Conversations', wk.conv, Math.round(CFG.conv / 4.33)], ['Meetings', wk.meet, Math.round(CFG.meet / 4.33)], ['Offers / EOIs', wk.offer, Math.max(1, Math.round(CFG.offer / 4.33))], ['Videos', videosWeek(monday(t)), CFG.videos * 7]].map(([l, v, g]) => `<div class="r"><span class="t">${l}</span><span class="b"><i style="width:${Math.min(100, v / g * 100)}%;background:${v >= g ? 'var(--ok)' : 'var(--ink)'}"></i></span><b class="num">${v}/${g}</b></div>`).join('')}
+    </div></div>
+    <div class="card panel s12"><h3><span>This month against target</span><span style="text-transform:none;letter-spacing:0;font-weight:600">Gold until you hit it, green when you do</span></h3><div class="rings">${ring(mo.calls, CFG.calls * 22, 'Calls')}${ring(mo.conv, CFG.conv, 'Conversations')}${ring(mo.meet, CFG.meet, 'Meetings')}${ring(mo.offer, CFG.offer, 'Offers / EOIs')}${ring(mo.deal, CFG.deal, 'Deals')}</div></div>
+    <div class="card panel s6"><h3>Calls per week</h3><svg viewBox="0 0 ${W} ${H + 26}" width="100%" role="img" aria-label="Calls per week, last 8 weeks">
+      <line x1="0" x2="${W}" y1="${H - H * wt / maxW}" y2="${H - H * wt / maxW}" stroke="var(--gold)" stroke-dasharray="6 5"/><text x="${W}" y="${H - H * wt / maxW - 7}" text-anchor="end" font-size="11" fill="var(--gold)" font-family="Manrope, Arial" font-weight="700">target ${wt}</text>
+      <line x1="0" x2="${W}" y1="${H}" y2="${H}" stroke="var(--line)"/>
+      ${ws.map((w, i) => { const h = w.calls / maxW * H, last = i === 7; return `<rect x="${i * bw + bw * .22}" y="${H - h}" width="${bw * .56}" height="${Math.max(h, 2)}" rx="6" fill="${last ? 'var(--gold)' : 'var(--ink)'}"/>${w.calls ? `<text x="${i * bw + bw / 2}" y="${H - h - 7}" text-anchor="middle" font-size="12" font-weight="800" fill="var(--ink)" font-family="Manrope, Arial">${w.calls}</text>` : ''}<text x="${i * bw + bw / 2}" y="${H + 18}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Manrope, Arial">${parseD(w.w).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'UTC'})}</text>`; }).join('')}
+    </svg></div>
+    <div class="card panel s6"><h3>Where deals leak</h3><div class="funnel">${funnel.map(([l, v]) => `<div class="s"><div class="f num" style="width:${Math.max(10, v / fmax * 70)}%">${fmt(v)}</div><span>${l}</span></div>`).join('')}</div></div>
+    <div class="card panel s6"><h3>Pipeline</h3><div class="hb">${byS.map(([s, v]) => `<div class="r"><span class="t"><span class="pill ${ST_CLS[s] || ''}">${s}</span></span><span class="b"><i style="width:${v / maxS * 100}%"></i></span><b class="num">${fmt(v)}</b></div>`).join('')}</div></div>
+    <div class="card panel s6"><h3>Top countries</h3><div class="hb">${cs.map(c => `<div class="r"><span class="t">${flag(c.cc)} ${esc(c.c)}</span><span class="b"><i style="width:${c.n / maxC * 100}%;background:var(--gold)"></i></span><b class="num">${c.n}</b></div>`).join('')}</div></div>
+  </div>
+  <div class="sec"><span class="h2">Last 8 weeks</span></div>
+  <div class="card tw"><table class="t num"><thead><tr><th>Week of</th><th>Calls</th><th>Conversations</th><th>Meetings</th><th>Offers</th><th>Deals</th><th>Commission</th><th>Videos</th></tr></thead><tbody>${ws.slice().reverse().map(w => `<tr><td><b>${parseD(w.w).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'UTC'})}</b></td><td><span class="pill ${w.calls >= wt ? 'ok' : w.calls >= wt * .7 ? 'warn' : w.calls ? 'hot' : ''}">${w.calls}</span></td><td>${w.conv}</td><td>${w.meet}</td><td>${w.offer}</td><td>${w.deal}</td><td>${fmt(w.comm)}</td><td>${videosWeek(w.w)}</td></tr>`).join('')}</tbody></table></div>
+  <div class="sec"><span class="h2">Settings</span><span class="muted" style="font-size:13px">Targets and your WhatsApp messages. {name} becomes the client's first name.</span></div>
+  <div class="card panel"><div class="fields">${[['calls', 'Calls per day'], ['conv', 'Conversations / month'], ['meet', 'Meetings / month'], ['offer', 'Offers / month'], ['deal', 'Deals / month'], ['budget', 'Commission budget (AED)'], ['stretch', 'Commission stretch (AED)'], ['videos', 'Videos per day'], ['qm', 'New leads/day · Gulf & Asia'], ['qa', 'New leads/day · Africa & Europe'], ['qe', 'New leads/day · Americas']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><input class="inp num" type="number" id="c-${k}" data-cfg="${k}" value="${CFG[k]}"></div>`).join('')}</div>
+  <div class="fields" style="grid-template-columns:1fr 1fr;margin-top:14px">${[['wa1_en', 'First WhatsApp · English'], ['wa2_en', 'Second WhatsApp · English'], ['wa1_fr', 'First WhatsApp · French'], ['wa2_fr', 'Second WhatsApp · French']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><textarea class="inp" id="c-${k}" data-cfg="${k}">${esc(CFG[k])}</textarea></div>`).join('')}</div></div>`;
+}
+
+// ---------- client sheet ----------
+const OUTL = {na:'No answer', sent:'WhatsApp sent', talk:'Talked', meet:'Meeting set', offer:'Offer / EOI sent', deal:'Deal closed', notnow:'Not now', dead:'Closed the file', replied:'Replied on WhatsApp'};
+function openSheet(id) {
+  sheetId = id; const L = byId(id); if (!L) return; LOG = null;
+  const old = OLD[L.t] || ['', ''], tz = tzOf(L);
+  $('#sheet').innerHTML = `<div class="sh"><button class="ic x" data-close aria-label="Close">${I.x}</button>
+    <div class="eyebrow" style="color:var(--gold2)">${flag(L.cc)} ${esc(L.c || '')}${tz ? ' · ' + hm(tz) + ' there' : ''}</div>
+    <div class="nm">${esc(L.name)}</div><div class="sub">${esc(L.status)} · ${old[0]}${L.due ? ' · next ' + nice(L.due) : ''}${L.bud ? ' · AED ' + fmt(L.bud) : ''}</div>
+    ${L.p ? `<div style="display:flex;gap:10px;margin-top:16px"><a class="btn gold" style="flex:1" href="tel:${esc(L.p)}" data-call="${L.i}">${I.call}<span class="num">${esc(L.p)}</span></a><a class="btn wa" style="flex:1" href="${waLink(L)}" target="_blank" rel="noopener" data-wa="${L.i}">${I.wa}WhatsApp</a></div>` : ''}</div>
+    <div class="sb">
+      ${L.p ? `<button class="btn ink" data-log="${L.i}">Log a call result</button>` : `<div class="field"><label for="s-phone">Add the phone number</label><input class="inp num" id="s-phone" placeholder="+212 6…" inputmode="tel"></div><button class="btn ink" data-savephone="${L.i}">Save number · add to today</button>`}
+      <div class="field"><label for="s-step">Next step</label><input class="inp" id="s-step" value="${esc(L.step)}" placeholder="e.g. Send Emaar options with payment plans"></div>
+      <div class="field"><label for="s-note">Notes</label><textarea class="inp" id="s-note" placeholder="What does this client want?">${esc(L.note)}</textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label for="s-status">Status</label><select class="inp" id="s-status">${STATUSES.map(s => `<option ${s === L.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div><div class="field"><label for="s-next">Next follow-up</label><input class="inp" type="date" id="s-next" value="${L.due || ''}"></div></div>
+      ${L.p ? `<div class="field"><label for="s-phone2">Phone</label><input class="inp num" id="s-phone2" value="${esc(L.p)}"></div>` : ''}
+      <button class="btn" data-savesheet="${L.i}">Save changes</button>
+      <div class="field"><label>History</label><div class="tl">
+        ${[...L.ev].reverse().map(e => `<div class="e"><b>${OUTL[e.o] || e.o}</b>${e.amt ? ' · AED ' + fmt(e.amt) : ''}<small>${e.ch === 'call' ? 'Call' : 'WhatsApp'} · ${nice(e.d)}${e.n ? ' · ' + esc(e.n) : ''}</small></div>`).join('')}
+        ${L.o ? `<div class="e old"><b>Notes from your old files</b><small>${esc(L.o)}</small></div>` : ''}
+        ${L.h ? `<div class="e old"><b>Old CRMs</b><small>${esc(L.h)}</small></div>` : ''}
+        <div class="e old"><b>Source</b><small>${esc(L.src || 'Added by you')}${L.e ? ' · ' + esc(L.e) : ''}</small></div>
+      </div></div>
+    </div>`;
+  show();
+}
+function show() { $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
+function hide() { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); sheetId = null; LOG = null; }
+
+// ---------- logging ----------
+const OUTS_CALL = [['na', 'No answer', 'WhatsApp them now', 'bad'], ['talk', 'Talked', 'Real conversation', 'good'], ['meet', 'Meeting set', 'In person or video', 'good'], ['offer', 'Offer / EOI', 'Numbers on the table', 'good'], ['deal', 'Deal closed', 'Enter commission', 'good'], ['notnow', 'Not now', 'Back in 90 days', 'bad'], ['dead', 'Not interested', 'Close the file', 'bad'], ['wrong', 'Wrong number', 'Close the file', 'bad']];
+function nextDate(L, o, temp, touches) {
+  const t = todayStr();
+  if (['dead', 'wrong', 'deal'].includes(o)) return null;
+  if (o === 'notnow') return addDays(t, 90);
+  let g = CAD[Math.min(touches, 9) - 1] ?? 90;
+  if (o === 'na') return g === 0 ? t : addDays(t, g);
+  if (['meet', 'offer'].includes(o) || temp === 'Hot') g = Math.min(Math.max(g, 1), 3);
+  else if (['talk', 'replied'].includes(o)) g = Math.min(Math.max(g, 2), 7);
+  return addDays(t, Math.max(g, 1));
+}
+function openLog(id, ch = 'call') {
+  const L = byId(id); if (!L) return; sheetId = id;
+  LOG = LOG && LOG.id === id ? LOG : {id, ch, o:null, temp:'Warm', note:'', amt:'', step:L.step || '', next:null, touched:false};
+  const n = (L.touches || 0) + 1;
+  if (LOG.o && !LOG.touched) LOG.next = nextDate(L, LOG.o, LOG.temp, n);
+  $('#sheet').innerHTML = `<div class="sh"><button class="ic x" data-close aria-label="Close">${I.x}</button><div class="eyebrow" style="color:var(--gold2)">${LOG.ch === 'call' ? 'How did the call go?' : 'WhatsApp reply'}</div><div class="nm">${esc(L.name)}</div><div class="sub">${flag(L.cc)} ${esc(L.c || '')} · touch ${n}</div></div>
+  <div class="sb">
+    <div class="outs">${OUTS_CALL.map(([k, t, s, c]) => `<button class="out ${c} ${LOG.o === k ? 'on' : ''}" data-out="${k}">${LOG.ch === 'wa' && k === 'talk' ? 'Replied' : t}<span>${s}</span></button>`).filter((x, i) => !(LOG.ch === 'wa' && i === 0)).join('')}</div>
+    ${LOG.o === 'na' ? `<a class="btn lg wa" href="${waLink(L)}" target="_blank" rel="noopener" data-wa-after="${L.i}">${I.wa}Send the WhatsApp now</a><div class="muted" style="font-size:12.5px;margin-top:-6px">Opens WhatsApp with your message written. Saving and the WhatsApp log happen together.</div>` : ''}
+    ${LOG.o === 'talk' ? `<div class="field"><label>How warm?</label><div class="seg">${['Contacted', 'Warm', 'Hot'].map(x => `<button class="${LOG.temp === x ? 'on' : ''}" data-temp="${x}">${x === 'Contacted' ? 'Just talking' : x}</button>`).join('')}</div></div>` : ''}
+    ${LOG.o === 'deal' ? `<div class="field"><label for="l-amt">Your commission (AED)</label><input class="inp num" type="number" id="l-amt" value="${esc(LOG.amt)}" placeholder="120000"></div>` : ''}
+    ${LOG.o ? `<div class="field"><label for="l-note">One line (optional)</label><input class="inp" id="l-note" value="${esc(LOG.note)}" placeholder="e.g. Wants 2BR off-plan, 3M, golden visa"></div>` : ''}
+    ${LOG.o && !['dead', 'wrong', 'deal', 'na'].includes(LOG.o) ? `<div class="field"><label for="l-step">Next step</label><input class="inp" id="l-step" value="${esc(LOG.step)}" placeholder="e.g. Send 3 Emaar options"></div>` : ''}
+    ${LOG.o && LOG.next !== null && !['dead', 'wrong', 'deal'].includes(LOG.o) ? `<div class="nextline"><span class="grow">Next follow-up <b>${nice(LOG.next)}</b></span><input class="inp" type="date" id="l-next" value="${LOG.next}" style="width:auto;height:38px"></div>` : ''}
+    <button class="btn lg ink" data-savelog ${LOG.o ? '' : 'disabled'}>Save${LOG.o ? ' · ' + (LOG.ch === 'wa' && LOG.o === 'talk' ? 'Replied' : OUTS_CALL.find(o => o[0] === LOG.o)[1]) : ''}</button>
+  </div>`;
+  show();
+}
+function keepLog() { const g = s => ($(s) || {}).value; if (!LOG) return; if (g('#l-note') !== undefined) LOG.note = g('#l-note'); if (g('#l-step') !== undefined) LOG.step = g('#l-step'); if (g('#l-amt') !== undefined) LOG.amt = g('#l-amt'); }
+function stateOf(L) { return {...(STATE[L.i] || {}), status:L.status, touches:L.touches || 0, last:L.last || '', next:L.due || null, note:L.note || '', step:L.step || '', ev:[...(L.ev || [])]}; }
+function applyLog(L, {ch, o, temp, note, step, next, amt}) {
+  const t = todayStr(), s = stateOf(L);
+  const map = {na:L.status === 'New' || L.status === 'No answer' ? 'No answer' : L.status, sent:L.status === 'New' ? 'No answer' : L.status, talk:temp || 'Warm', replied:temp || 'Warm', meet:'Meeting set', offer:'Offer/EOI sent', deal:'Closed won', notnow:'Not now', dead:'Dead', wrong:'Dead'};
+  s.status = map[o]; s.touches = (L.touches || 0) + 1; s.last = t; s.next = next === undefined ? nextDate(L, o, temp, s.touches) : next;
+  if (note) s.note = note; if (step !== undefined) s.step = step;
+  if (o === 'deal') s.comm = +amt || 0;
+  s.ev = [...s.ev, {d:t, ch, o:o === 'wrong' ? 'dead' : o, ...(note ? {n:String(note).slice(0, 160)} : {}), ...(o === 'deal' && amt ? {amt:+amt} : {})}].slice(-60);
+  return s;
+}
+async function save(id, s, msg, undo) {
+  const prev = STATE[id]; STATE[id] = s; render(); if (sheetId === id && !LOG) openSheet(id);
+  toast(msg, undo ? () => { if (prev) save(id, prev, 'Undone'); else { delete STATE[id]; render(); store && store.ok && store.clearState(id).catch(() => {}); } } : null);
+  if (!store || !store.ok) return;
+  try { await store.saveState(id, s); } catch (e) { toast(e && e.code === 'quota_exceeded' ? 'Storage is full' : 'Not saved. Check your connection and try again.'); }
+}
+function waLogged(id) {
+  const L = byId(id); if (!L || !L.p) return;
+  const s = applyLog(L, {ch:'wa', o:'sent'});
+  save(id, s, `WhatsApp logged · next ${nice(s.next)}`, true);
+}
+let tt;
+function toast(t, undo) { $('#toastTxt').textContent = t; const u = $('#toastUndo'); u.hidden = !undo; u.onclick = () => { $('#toast').classList.remove('on'); undo && undo(); }; $('#toast').classList.add('on'); clearTimeout(tt); tt = setTimeout(() => $('#toast').classList.remove('on'), undo ? 6000 : 2800); }
+async function saveKv(k, v) { KV[k] = v; render(); if (store && store.ok) try { await store.saveKv(k, v); } catch (e) { toast('Not saved. Try again.'); } }
+
+// ---------- export ----------
+async function exportXlsx() {
+  if (!window.XLSX) { toast('Export did not load. Reload the page.'); return; }
+  const t = todayStr(), leads = all(), mo = kpis(monthStart(t), monthEnd(t)), wk = kpis(monday(t), t);
+  const wb = XLSX.utils.book_new();
+  const sum = [['Mostafa Hakimi · Client Desk', ''], ['Report date', t], [], ['THIS MONTH', 'Actual', 'Target'], ['Calls', mo.calls, CFG.calls * 22], ['Conversations', mo.conv, CFG.conv], ['Meetings', mo.meet, CFG.meet], ['Offers / EOIs', mo.offer, CFG.offer], ['Deals', mo.deal, CFG.deal], ['Commission (AED)', mo.comm, CFG.budget], ['Commission stretch (AED)', '', CFG.stretch], [], ['THIS WEEK', 'Actual', 'Target'], ['Calls', wk.calls, CFG.calls * 5], ['Conversations', wk.conv, ''], ['Meetings', wk.meet, ''], ['Offers', wk.offer, ''], ['Deals', wk.deal, ''], [], ['PIPELINE', 'Clients'], ...STATUSES.map(s => [s, leads.filter(L => L.status === s).length]), [], ['COUNTRIES', 'Clients'], ...countryList(leads).map(c => [c.c, c.n])];
+  const s1 = XLSX.utils.aoa_to_sheet(sum); s1['!cols'] = [{wch:30}, {wch:14}, {wch:14}]; XLSX.utils.book_append_sheet(wb, s1, 'Summary');
+  const rows = leads.map(L => ({Name:L.name, Phone:L.p, Country:L.c, Status:L.status, 'Before':(OLD[L.t] || [''])[0], Touches:L.touches, 'Last contact':L.last, 'Next follow-up':L.due || '', 'Next step':L.step, Notes:L.note || L.o || '', 'Budget (AED)':L.bud || '', Source:L.src || 'Added'}));
+  const s2 = XLSX.utils.json_to_sheet(rows); s2['!cols'] = [26, 17, 16, 14, 16, 8, 12, 13, 30, 50, 12, 30].map(w => ({wch:w})); XLSX.utils.book_append_sheet(wb, s2, 'Clients');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weeks(12).map(w => ({'Week of':w.w, Calls:w.calls, Conversations:w.conv, Meetings:w.meet, Offers:w.offer, Deals:w.deal, 'Commission (AED)':w.comm}))), 'Weekly');
+  const act = events().sort((a, b) => b.d.localeCompare(a.d)).map(e => { const L = byId(e.id) || {}; return {Date:e.d, Client:L.name, Country:L.c, Channel:e.ch === 'call' ? 'Call' : 'WhatsApp', Result:OUTL[e.o] || e.o, Note:e.n || '', 'Commission (AED)':e.amt || ''}; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(act.length ? act : [{Date:'', Client:'No activity yet'}]), 'Activity');
+  const data = XLSX.write(wb, {type:'array', bookType:'xlsx'}), name = `Hak-Client-Desk-${t}.xlsx`;
+  if (store && store.name === 'claude') { try { const dl = await window.claude.use('downloads'); if (!dl) throw {code:'unavailable'}; await dl.save({filename:name, data}); toast('Excel saved'); } catch (e) { if (!e || e.code !== 'declined') toast('Download not available in this view'); } }
+  else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download = name; a.click(); }
+}
+
+// ---------- clicks ----------
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-call],[data-wa],[data-wa-after],[data-open],[data-log],[data-skip],[data-reply],[data-country],[data-filter],[data-more],[data-add],[data-close],[data-out],[data-temp],[data-savelog],[data-savesheet],[data-savephone],[data-phone],[data-vid],[data-market],[data-export],[data-report],[data-saveadd],[data-import]');
+  if (!el) { if (e.target === $('#scrim')) hide(); return; }
+  const d = el.dataset;
+  if (d.call) { const id = d.call; setTimeout(() => openLog(id, 'call'), 400); return; }            // tel: opens the phone; the result sheet waits for you
+  if (d.wa) { waLogged(d.wa); if (sheetId === d.wa) hide(); return; }                                  // WhatsApp logs itself
+  if (d.waAfter) { keepLog(); const L = byId(d.waAfter); let s = applyLog(L, {ch:'call', o:'na', note:LOG.note}); s = applyLog({...L, ...s, ev:s.ev, touches:s.touches}, {ch:'wa', o:'sent'}); hide(); save(L.i, s, `No answer + WhatsApp logged · next ${nice(s.next)}`, true); return; }
+  if (d.open) { if (e.target.closest('a,button') && e.target.closest('a,button') !== el) return; openSheet(d.open); return; }
+  if (d.log) { LOG = null; openLog(d.log, 'call'); return; }
+  if (d.skip) { skipped.add(d.skip); render(); return; }
+  if (d.reply) { const [id, y] = d.reply.split(':'); const L = byId(id); const s = stateOf(L); const last = s.ev[s.ev.length - 1]; if (last) s.ev[s.ev.length - 1] = {...last, checked:1}; STATE[id] = s; if (y === '1') { LOG = {id, ch:'wa', o:'talk', temp:'Warm', note:'', amt:'', step:L.step || '', next:null, touched:false}; openLog(id, 'wa'); } else { s.next = nextDate(L, 'na', null, L.touches || 1); save(id, s, 'Noted. Next follow-up ' + nice(s.next)); } return; }
+  if (d.country) { country = d.country; filt = 'All'; more = 0; render(); return; }
+  if (d.filter) { filt = d.filter; more = 0; render(); return; }
+  if (d.more !== undefined) { more += 40; render(); return; }
+  if (d.add !== undefined) { openAdd(); return; }
+  if (d.close !== undefined) { hide(); return; }
+  if (d.out) { keepLog(); LOG.o = d.out; LOG.touched = false; openLog(LOG.id, LOG.ch); return; }
+  if (d.temp) { keepLog(); LOG.temp = d.temp; LOG.touched = false; openLog(LOG.id, LOG.ch); return; }
+  if (d.savelog !== undefined) { keepLog(); const L = byId(LOG.id); const o = LOG.ch === 'wa' && LOG.o === 'talk' ? 'replied' : LOG.o; const s = applyLog(L, {ch:LOG.ch === 'wa' ? 'wa' : 'call', o, temp:LOG.temp, note:LOG.note, step:LOG.step, next:['dead', 'wrong', 'deal'].includes(LOG.o) ? null : LOG.next, amt:LOG.amt}); const wasDeal = LOG.o === 'deal'; LOG = null; hide(); save(L.i, s, wasDeal ? 'Congratulations. Deal logged.' : `Saved · next ${s.next ? nice(s.next) : 'none'}`, true); return; }
+  if (d.savesheet) { const L = byId(d.savesheet), s = stateOf(L); s.step = $('#s-step').value; s.note = $('#s-note').value; s.status = $('#s-status').value; s.next = $('#s-next').value || null; const p2 = $('#s-phone2'); if (p2 && p2.value.trim() !== L.p) s.phone = '+' + p2.value.replace(/\D/g, ''); if (!L.has && !s.next && ACTIVE({status:s.status})) s.next = L.planned || todayStr(); save(L.i, s, 'Saved'); return; }
+  if (d.savephone) { const v = $('#s-phone').value.trim(); if (!/^\+?\d[\d\s-]{6,}$/.test(v)) { toast('Type it with the country code, e.g. +212 6…'); return; } const L = byId(d.savephone), s = stateOf(L); s.phone = '+' + v.replace(/\D/g, ''); s.next = todayStr(); hide(); save(L.i, s, 'Number saved. Added to today.'); return; }
+  if (d.phone) { openSheet(d.phone); setTimeout(() => $('#s-phone') && $('#s-phone').focus(), 50); return; }
+  if (d.vid) { const k = 'day-' + todayStr(), v = {...(KV[k] || {})}; v.videos = Math.max(0, (+v.videos || 0) + +d.vid); saveKv(k, v); return; }
+  if (d.market !== undefined) { const k = 'day-' + todayStr(), v = {...(KV[k] || {})}; v.market = !v.market; saveKv(k, v); return; }
+  if (d.export !== undefined) { exportXlsx(); return; }
+  if (d.report !== undefined) { const t = todayStr(), k = kpis(monday(t), t); const txt = `Friday report · week of ${monday(t)}\nCalls: ${k.calls} (target ${CFG.calls * 5})\nConversations: ${k.conv}\nMeetings: ${k.meet}\nOffers/EOIs: ${k.offer}\nDeals: ${k.deal}\nCommission: AED ${fmt(k.comm)}\nVideos: ${videosWeek(monday(t))}`; navigator.clipboard.writeText(txt).then(() => toast('Copied. Paste it to Claude.'), () => toast('Copy was blocked here.')); return; }
+  if (d.saveadd !== undefined) { saveAdd(); return; }
+  if (d.import !== undefined) { $('#impfile').click(); return; }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'l-next' && LOG) { LOG.next = e.target.value; LOG.touched = true; keepLog(); openLog(LOG.id, LOG.ch); }
+  const k = e.target.dataset.cfg; if (k) { CFG[k] = e.target.tagName === 'TEXTAREA' ? e.target.value : (+e.target.value || DEF[k]); saveKv('config', CFG); }
+  if (e.target.id === 'impfile') doImport(e.target.files[0]);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); if (e.key === 'Enter' && e.target.matches('.row')) openSheet(e.target.dataset.open); });
+
+function openAdd() {
+  sheetId = null; LOG = null;
+  $('#sheet').innerHTML = `<div class="sh"><button class="ic x" data-close aria-label="Close">${I.x}</button><div class="eyebrow" style="color:var(--gold2)">New client</div><div class="nm">Add a client</div><div class="sub">They go straight to Call now. Call within the hour.</div></div>
+  <div class="sb"><div class="field"><label for="a-name">Name</label><input class="inp" id="a-name"></div>
+  <div class="field"><label for="a-phone">Phone with country code</label><input class="inp num" id="a-phone" placeholder="+234…" inputmode="tel"></div>
+  <div class="field"><label for="a-src">Where from</label><select class="inp" id="a-src"><option>Instagram</option><option>Referral</option><option>Trip / event</option><option>Meta ads</option><option>Company lead</option><option>Other</option></select></div>
+  <div class="field"><label for="a-bud">Budget in AED (optional)</label><input class="inp num" type="number" id="a-bud"></div>
+  <div class="field"><label for="a-note">What do they want?</label><input class="inp" id="a-note"></div>
+  <button class="btn lg ink" data-saveadd>Add client</button></div>`;
+  show(); setTimeout(() => $('#a-name').focus(), 50);
+}
+async function saveAdd() {
+  const n = $('#a-name').value.trim(), p = $('#a-phone').value.trim(); if (!n) { toast('Type a name'); return; }
+  const g = fromPhone(p) || {c:'No number yet', cc:'', b:'x'};
+  const id = 'N' + Date.now().toString(36).toUpperCase();
+  const b = {i:id, n, p:p ? '+' + p.replace(/\D/g, '') : '', c:p ? g.c : 'No number yet', cc:g.cc, b:g.b, t:'New', s:110, src:$('#a-src').value + ' · added ' + todayStr(), o:$('#a-note').value.trim(), ...($('#a-bud').value ? {bud:+$('#a-bud').value} : {})};
+  ADDED[id] = b; hide();
+  try { if (store && store.ok) await store.addLead(b); } catch (e) { toast('Client not saved. Try again.'); return; }
+  save(id, {status:'New', touches:0, last:'', next:todayStr(), note:b.o, step:'Call within the hour', ev:[]}, 'Client added to Call now');
+}
+
+// ---------- first-run import (self-hosted) ----------
+let NEEDS_IMPORT = false, SAVE_WARN = '';
+function vImport() { return `<div class="card login"><div class="eyebrow">One-time setup</div><div class="h2">Load your clients</div><div class="muted">Choose the file <b>leads.json</b> from the setup folder. It goes into your private database, not onto the website.</div><button class="btn lg ink" data-import>Choose leads.json</button><input type="file" id="impfile" accept=".json" hidden><div id="impmsg" class="muted"></div></div>`; }
+async function doImport(f) {
+  if (!f) return; const msg = $('#impmsg');
+  try { const list = JSON.parse(await f.text()); msg.textContent = 'Loading…'; await store.importAll(list, n => msg.textContent = `Loaded ${n} of ${list.length}`); location.reload(); }
+  catch (e) { msg.textContent = 'That did not work: ' + (e.message || 'check the file and try again'); }
+}
+function vLogin() {
+  return `<div class="card login"><div class="logo" style="justify-content:center"><b style="color:var(--ink)">HAK</b><span>Client Desk</span></div><div class="h2">Sign in</div><div class="muted">We email you a sign-in link. Only your email can open your clients.</div><input class="inp" id="lg-email" type="email" placeholder="you@email.com" autocomplete="email"><button class="btn lg ink" id="lg-go">Email me the link</button><div class="muted" id="lg-msg"></div></div>`;
+}
+
+// ---------- routing & boot ----------
+function route() { const h = (location.hash || '#now').slice(1); view = NAV.some(n => n[0] === h) ? h : 'now'; more = 0; hide(); render(); window.scrollTo(0, 0); }
+window.addEventListener('hashchange', route);
+const clock = () => { $('#clock').textContent = 'Dubai ' + hm('Asia/Dubai'); };
+setInterval(() => { clock(); if (view === 'now' && !$('#sheet').classList.contains('on') && document.activeElement?.tagName !== 'INPUT') render(); }, 60000);
+function syncNote(t) { SAVE_WARN = t; render(); }
+
+async function boot() {
+  clock();
+  if (CFGX && CFGX.supabaseUrl) {
+    store = SupaStore;
+    let r; try { r = await store.init(); } catch (e) { $('#main').innerHTML = '<div class="card login"><div class="h2">Could not connect</div><div class="muted">Check your internet connection, then reload.</div></div>'; return; }
+    if (r === 'login') { nav(); $('#main').innerHTML = vLogin(); $('#lg-go').onclick = async () => { const em = $('#lg-email').value.trim(); if (!em) return; const {error} = await store.sb.auth.signInWithOtp({email:em, options:{emailRedirectTo:location.origin + location.pathname, shouldCreateUser:true}}); $('#lg-msg').textContent = error ? error.message : 'Check your email and tap the link.'; }; return; }
+    try { BASE = await store.base(); } catch (e) { $('#main').innerHTML = `<div class="card login"><div class="h2">Not allowed</div><div class="muted">This email cannot open the client list. Sign in with your own email.</div><button class="btn" onclick="location.reload()">Reload</button></div>`; return; }
+    if (!BASE.length) { NEEDS_IMPORT = true; route(); return; }
+  } else {
+    store = ArtifactStore;
+    try { BASE = await store.base(); } catch (e) { $('#main').innerHTML = '<div class="card login"><div class="h2">Could not load your clients</div><div class="muted">Reload the page.</div></div>'; return; }
+    route();
+    const ok = await store.init();
+    if (!ok) { SAVE_WARN = 'Saving is off in this view. Open the page from claude.ai while signed in.'; render(); return; }
+  }
+  route();
+  let first = true; const timer = setTimeout(() => { if (first) syncNote('Your saved updates are not reachable yet. Check your connection.'); }, 10000);
+  store.watch((st, fresh) => { STATE = st; if (fresh && first) { first = false; clearTimeout(timer); if (SAVE_WARN.startsWith('Your saved')) SAVE_WARN = ''; } if (!LOG) render(); }, ad => { ADDED = ad; if (!LOG) render(); }, kv => { KV = kv; CFG = {...DEF, ...(kv.config || {})}; if (!LOG) render(); });
+}
+boot();
+})();
+</script>
+</body>
+</html>
