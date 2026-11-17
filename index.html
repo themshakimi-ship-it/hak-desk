@@ -275,10 +275,12 @@ const FR_CC = ['FR', 'BE', 'MA', 'DZ', 'TN', 'PF', 'CI', 'SN', 'CM', 'TD', 'LU',
 
 // ---------- settings ----------
 const DEF = {calls:10, conv:60, meet:15, offer:6, deal:3, budget:166667, stretch:250000, videos:2, qm:4, qa:4, qe:2, start:'2026-11-17',
-  wa1_en:"Hi {name}, Hak here from Dubai. Just tried calling you. Nothing urgent, I wanted to check if you're still looking at property here, because a lot has changed. If you are, I'll give you my honest view on what's worth it and what isn't. When's a good time to talk?",
-  wa2_en:"{name}, quick one. I came across something that made me think of you. Should I send it over, or are you not looking anymore? Either answer is fine.",
-  wa1_fr:"Bonjour {name}, c'est Hak, de Dubaï. J'ai essayé de vous appeler. Rien d'urgent : je voulais savoir si vous cherchez toujours un bien ici, parce que le marché a beaucoup bougé. Si oui, je vous donne mon avis honnête sur ce qui vaut le coup et ce qui ne le vaut pas. Quand est-ce que je peux vous appeler ?",
-  wa2_fr:"{name}, petite question. J'ai vu quelque chose qui m'a fait penser à vous. Je vous l'envoie, ou vous ne cherchez plus ? Les deux réponses me vont."};
+  wa0_en:"Hi {name}, it's Hak, property advisor in Dubai. You asked about property here, so I wanted to reach you personally. When is a good time for a quick call?",
+  wa1_en:"Hi {name}, it's Hak from Dubai. I just tried to call you about property here. When is a good time to talk?",
+  wa2_en:"Hi {name}, Hak here. Are you still looking at Dubai? A simple yes or no is fine.",
+  wa0_fr:"Bonjour {name}, c'est Hak, conseiller immobilier à Dubaï. Vous avez demandé des informations sur l'immobilier ici, alors je voulais vous contacter personnellement. Quand puis-je vous appeler ?",
+  wa1_fr:"Bonjour {name}, c'est Hak de Dubaï. Je viens d'essayer de vous appeler pour l'immobilier ici. Quand puis-je vous appeler ?",
+  wa2_fr:"Bonjour {name}, c'est Hak. Vous cherchez toujours à Dubaï ? Un simple oui ou non me suffit."};
 const CAD = [0, 3, 7, 7, 14, 30, 60, 90, 90];
 const STATUSES = ['New', 'No answer', 'Contacted', 'Warm', 'Hot', 'Meeting set', 'Offer/EOI sent', 'Closed won', 'Past client', 'Not now', 'Dead'];
 const ST_CLS = {Hot:'hot', 'Meeting set':'warn', 'Offer/EOI sent':'warn', 'Closed won':'ok', 'Past client':'ok', Warm:'gold'};
@@ -372,8 +374,8 @@ function weeks(n) { const w0 = monday(todayStr()), out = []; for (let i = n - 1;
 const videosWeek = w => { let v = 0; for (let i = 0; i < 7; i++) v += +((KV['day-' + addDays(w, i)] || {}).videos) || 0; return v; };
 
 // ---------- WhatsApp message ----------
-function waText(L) { const fr = FR_CC.includes(L.cc); const second = (L.ev || []).some(e => e.ch === 'wa'); const t = CFG[(second ? 'wa2_' : 'wa1_') + (fr ? 'fr' : 'en')]; return t.replace(/\{name\}/g, firstName(L.name)); }
-const waLink = L => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(waText(L))}`;
+function waText(L, mode) { const fr = FR_CC.includes(L.cc), ev = L.ev || [], sent = ev.some(e => e.ch === 'wa'); const k = (sent ? 'wa2_' : (mode === 'missed' || ev.some(e => e.ch === 'call')) ? 'wa1_' : 'wa0_') + (fr ? 'fr' : 'en'); return (CFG[k] || DEF[k]).replace(/\{name\}/g, firstName(L.name)); }
+const waLink = (L, mode) => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(waText(L, mode))}`;
 
 // ---------- render ----------
 const NAV = [['now', 'Call now', 'now'], ['clients', 'Clients', 'people'], ['results', 'Results', 'chart']];
@@ -514,7 +516,7 @@ function vResults() {
   <div class="card tw"><table class="t num"><thead><tr><th>Week of</th><th>Calls</th><th>Conversations</th><th>Meetings</th><th>Offers</th><th>Deals</th><th>Commission</th><th>Videos</th></tr></thead><tbody>${ws.slice().reverse().map(w => `<tr><td><b>${parseD(w.w).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'UTC'})}</b></td><td><span class="pill ${w.calls >= wt ? 'ok' : w.calls >= wt * .7 ? 'warn' : w.calls ? 'hot' : ''}">${w.calls}</span></td><td>${w.conv}</td><td>${w.meet}</td><td>${w.offer}</td><td>${w.deal}</td><td>${fmt(w.comm)}</td><td>${videosWeek(w.w)}</td></tr>`).join('')}</tbody></table></div>
   <div class="sec"><span class="h2">Settings</span><span class="muted" style="font-size:13px">Targets and your WhatsApp messages. {name} becomes the client's first name.</span></div>
   <div class="card panel"><div class="fields">${[['calls', 'Calls per day'], ['conv', 'Conversations / month'], ['meet', 'Meetings / month'], ['offer', 'Offers / month'], ['deal', 'Deals / month'], ['budget', 'Commission budget (AED)'], ['stretch', 'Commission stretch (AED)'], ['videos', 'Videos per day'], ['qm', 'New leads/day · Gulf & Asia'], ['qa', 'New leads/day · Africa & Europe'], ['qe', 'New leads/day · Americas']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><input class="inp num" type="number" id="c-${k}" data-cfg="${k}" value="${CFG[k]}"></div>`).join('')}</div>
-  <div class="fields" style="grid-template-columns:1fr 1fr;margin-top:14px">${[['wa1_en', 'First WhatsApp · English'], ['wa2_en', 'Second WhatsApp · English'], ['wa1_fr', 'First WhatsApp · French'], ['wa2_fr', 'Second WhatsApp · French']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><textarea class="inp" id="c-${k}" data-cfg="${k}">${esc(CFG[k])}</textarea></div>`).join('')}</div></div>`;
+  <div class="fields" style="grid-template-columns:1fr 1fr;margin-top:14px">${[['wa0_en', 'New lead · English'], ['wa0_fr', 'New lead · French'], ['wa1_en', 'After missed call · English'], ['wa1_fr', 'After missed call · French'], ['wa2_en', 'No reply yet · English'], ['wa2_fr', 'No reply yet · French']].map(([k, l]) => `<div class="field"><label for="c-${k}">${l}</label><textarea class="inp" id="c-${k}" data-cfg="${k}">${esc(CFG[k])}</textarea></div>`).join('')}</div></div>`;
 }
 
 // ---------- client sheet ----------
@@ -565,7 +567,7 @@ function openLog(id, ch = 'call') {
   $('#sheet').innerHTML = `<div class="sh"><button class="ic x" data-close aria-label="Close">${I.x}</button><div class="eyebrow" style="color:var(--gold2)">${LOG.ch === 'call' ? 'How did the call go?' : 'WhatsApp reply'}</div><div class="nm">${esc(L.name)}</div><div class="sub">${flag(L.cc)} ${esc(L.c || '')} · touch ${n}</div></div>
   <div class="sb">
     <div class="outs">${OUTS_CALL.map(([k, t, s, c]) => `<button class="out ${c} ${LOG.o === k ? 'on' : ''}" data-out="${k}">${LOG.ch === 'wa' && k === 'talk' ? 'Replied' : t}<span>${s}</span></button>`).filter((x, i) => !(LOG.ch === 'wa' && i === 0)).join('')}</div>
-    ${LOG.o === 'na' ? `<a class="btn lg wa" href="${waLink(L)}" target="_blank" rel="noopener" data-wa-after="${L.i}">${I.wa}Send the WhatsApp now</a><div class="muted" style="font-size:12.5px;margin-top:-6px">Opens WhatsApp with your message written. Saving and the WhatsApp log happen together.</div>` : ''}
+    ${LOG.o === 'na' ? `<a class="btn lg wa" href="${waLink(L, 'missed')}" target="_blank" rel="noopener" data-wa-after="${L.i}">${I.wa}Send the WhatsApp now</a><div class="muted" style="font-size:12.5px;margin-top:-6px">Opens WhatsApp with your message written. Saving and the WhatsApp log happen together.</div>` : ''}
     ${LOG.o === 'talk' ? `<div class="field"><label>How warm?</label><div class="seg">${['Contacted', 'Warm', 'Hot'].map(x => `<button class="${LOG.temp === x ? 'on' : ''}" data-temp="${x}">${x === 'Contacted' ? 'Just talking' : x}</button>`).join('')}</div></div>` : ''}
     ${LOG.o === 'deal' ? `<div class="field"><label for="l-amt">Your commission (AED)</label><input class="inp num" type="number" id="l-amt" value="${esc(LOG.amt)}" placeholder="120000"></div>` : ''}
     ${LOG.o ? `<div class="field"><label for="l-note">One line (optional)</label><input class="inp" id="l-note" value="${esc(LOG.note)}" placeholder="e.g. Wants 2BR off-plan, 3M, golden visa"></div>` : ''}
