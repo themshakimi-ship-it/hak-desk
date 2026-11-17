@@ -448,7 +448,7 @@ const waLink = (L, mode) => `https://wa.me/${L.p.replace(/\D/g, '')}?text=${enco
 
 // ---------- PROJECTS & PROMOTIONS ----------
 let PROJ = {items:[], updated:''}, pFilt = 'All', pQuery = '', AUD = null;
-async function loadProjects() { try { const r = await fetch('projects.json?v=' + Date.now(), {cache:'no-store'}); if (r.ok) { PROJ = await r.json(); if (!LOG) render(); } } catch (e) {} }
+async function loadProjects() { try { const r = await fetch('projects.json?v=' + Date.now(), {cache:'no-store'}); if (r.ok) { PROJ = await r.json(); if (!LOG && BASE.length) render(); } } catch (e) {} }
 const mAED = n => n >= 1e6 ? (Math.round(n / 1e5) / 10) + 'M' : fmt(n / 1e3) + 'K';
 const hoTxt = h => { if (!h) return ''; const [y, m] = h.split('-'); return 'Q' + Math.ceil(+m / 3) + ' ' + y; };
 const brTxt = p => p.bmax == null ? '' : (p.bmin === p.bmax ? '' : (p.bmin ? p.bmin : 'Studio') + '–') + p.bmax + ' BR';
