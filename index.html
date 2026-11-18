@@ -771,10 +771,20 @@ function applyLog(L, {ch, o, temp, note, step, next, amt}) {
   s.ev = [...s.ev, {d:t, ch, o:o === 'wrong' ? 'dead' : o, ...(note ? {n:String(note).slice(0, 160)} : {}), ...(o === 'deal' && amt ? {amt:+amt} : {})}].slice(-60);
   return s;
 }
+const META_STAGE = {Warm:'Qualified', Hot:'Qualified', 'Meeting set':'Meeting', 'Offer/EOI sent':'Offer', 'Closed won':'Converted', Dead:'Disqualified'};
+async function metaFb(id, prev, s) {
+  try {
+    if (!/^M\d+$/.test(id) || !s || (prev && prev.status === s.status)) return;
+    const stage = META_STAGE[s.status]; if (!stage) return;
+    const {data} = await store.sb.auth.getSession(); const tok = data.session && data.session.access_token; if (!tok) return;
+    fetch(CFGX.supabaseUrl + '/functions/v1/meta-leads?feedback=1', {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer ' + tok, apikey:CFGX.supabaseKey}, body:JSON.stringify({lead_id:id.slice(1), stage})}).catch(() => {});
+  } catch (e) {}
+}
 async function save(id, s, msg, undo) {
   const prev = STATE[id]; STATE[id] = s; render(); if (sheetId === id && !LOG) openSheet(id);
   toast(msg, undo ? () => { if (prev) save(id, prev, 'Undone'); else { delete STATE[id]; render(); store && store.ok && store.clearState(id).catch(() => {}); } } : null);
   if (!store || !store.ok) return;
+  metaFb(id, prev, s);
   try { await store.saveState(id, s); } catch (e) { toast(e && e.code === 'quota_exceeded' ? 'Storage is full' : 'Not saved. Check your connection and try again.'); }
 }
 function waLogged(id) {
