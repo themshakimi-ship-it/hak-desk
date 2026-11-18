@@ -704,6 +704,85 @@ function vResults() {
 
 // ---------- client sheet ----------
 const OUTL = {na:'No answer', sent:'WhatsApp sent', talk:'Talked', meet:'Meeting set', offer:'Offer / EOI sent', deal:'Deal closed', notnow:'Not now', dead:'Closed the file', replied:'Replied on WhatsApp'};
+// ---------- Booking: 3 free times → WhatsApp → Google Calendar + Zoom ----------
+const BOOK_URL = 'https://script.google.com/macros/s/AKfycbzfUrezW-LCzdmWUMdCFb3skBVze3KcfZUUwhSawcVkV5Qb1qtMeF5psgQnSG7Jcs8uAA/exec';
+const BK_TXT = {
+  en:{offer:"Hello {name}, Mostafa Hakimi here. Thank you for your time today. These three times work for me for our {what}:\n{slots}\n(Dubai time). Just reply 1, 2 or 3 and I'll confirm.", zoom:'Zoom call', person:'meeting',
+    confZ:"Confirmed, {name}. Our Zoom call is on {when} Dubai time. The Zoom link is in the invitation I just sent to {email}, and here it is too: {link}. Speak soon. Mostafa",
+    confZ0:"Confirmed, {name}. Our Zoom call is on {when} Dubai time. Here is the Zoom link: {link}. Speak soon. Mostafa",
+    confP:"Confirmed, {name}. We meet on {when} Dubai time at {place}. Here is the location: {map}. See you then. Mostafa"},
+  fr:{offer:"Bonjour {name}, c'est Mostafa Hakimi. Merci pour votre temps aujourd'hui. Voici trois créneaux possibles pour notre {what} :\n{slots}\n(heure de Dubaï). Répondez simplement 1, 2 ou 3 et je vous confirme.", zoom:'appel Zoom', person:'rendez-vous',
+    confZ:"C'est confirmé, {name}. Notre appel Zoom est {when}, heure de Dubaï. Le lien Zoom est dans l'invitation envoyée à {email}, et le voici aussi : {link}. À bientôt. Mostafa",
+    confZ0:"C'est confirmé, {name}. Notre appel Zoom est {when}, heure de Dubaï. Voici le lien Zoom : {link}. À bientôt. Mostafa",
+    confP:"C'est confirmé, {name}. Notre rendez-vous est {when}, heure de Dubaï, à {place}. Voici la localisation : {map}. À bientôt. Mostafa"},
+  ar:{offer:"مرحباً {name}، معك مصطفى حكيمي. شكراً على وقتك اليوم. هذه ثلاثة مواعيد تناسبني {what}:\n{slots}\n(بتوقيت دبي). فقط أرسل 1 أو 2 أو 3 وسأؤكد لك.", zoom:'لمكالمة زوم', person:'للقاء',
+    confZ:"تم التأكيد يا {name}. مكالمة زوم يوم {when} بتوقيت دبي. رابط زوم موجود في الدعوة التي أرسلتها إلى {email}، وهذا هو أيضاً: {link}. إلى اللقاء. مصطفى",
+    confZ0:"تم التأكيد يا {name}. مكالمة زوم يوم {when} بتوقيت دبي. هذا رابط زوم: {link}. إلى اللقاء. مصطفى",
+    confP:"تم التأكيد يا {name}. لقاؤنا يوم {when} بتوقيت دبي في {place}. هذا الموقع: {map}. إلى اللقاء. مصطفى"}
+};
+function bkParts(iso, lg, long) {
+  const loc = {en:'en-GB', fr:'fr-FR', ar:'ar-u-nu-latn'}[lg], o = {timeZone:'Asia/Dubai'}, d = new Date(iso);
+  const wd = d.toLocaleDateString(loc, {...o, weekday:long ? 'long' : 'short'}), day = d.toLocaleDateString(loc, {...o, day:'numeric'}), mon = d.toLocaleDateString(loc, {...o, month:lg === 'ar' ? 'long' : 'short'});
+  const [hh, mm] = d.toLocaleTimeString('en-GB', {...o, hour:'2-digit', minute:'2-digit', hour12:false}).split(':');
+  return {wd, day, mon, hh, mm};
+}
+function bkSlot(iso, lg) { const p = bkParts(iso, lg); return lg === 'fr' ? `${p.wd} ${p.day} ${p.mon}, ${p.hh}h${p.mm}` : lg === 'ar' ? `${p.wd} ${p.day} ${p.mon}، ${p.hh}:${p.mm}` : `${p.wd} ${p.day} ${p.mon}, ${p.hh}:${p.mm}`; }
+function bkWhen(iso, lg) { const p = bkParts(iso, lg, true); return lg === 'fr' ? `${p.wd} ${p.day} ${p.mon} à ${p.hh}h${p.mm}` : lg === 'ar' ? `${p.wd} ${p.day} ${p.mon} الساعة ${p.hh}:${p.mm}` : `${p.wd} ${p.day} ${p.mon} at ${p.hh}:${p.mm}`; }
+const bkFill = (t, v) => t.replace(/\{(\w+)\}/g, (m, k) => v[k] !== undefined ? v[k] : m);
+function bkOfferLink(L, bk) { const lg = langOf(L), T = BK_TXT[lg]; const t = bkFill(T.offer, {name:firstName(L.name), what:T[bk.kind === 'person' ? 'person' : 'zoom'], slots:bk.slots.map((s, i) => `${i + 1}) ${bkSlot(s, lg)}`).join('\n')}); return `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(t)}`; }
+function bkConfLink(L, bk) { const lg = langOf(L), T = BK_TXT[lg]; const v = {name:firstName(L.name), when:bkWhen(bk.start, lg), email:bk.email || '', link:bk.zoom || '', place:bk.place || '', map:'https://maps.google.com/?q=' + encodeURIComponent(bk.place || '')}; const t = bkFill(bk.kind === 'person' ? T.confP : bk.email ? T.confZ : T.confZ0, v); return `https://wa.me/${L.p.replace(/\D/g, '')}?text=${encodeURIComponent(t)}`; }
+async function bkCall(body) {
+  const {data} = await store.sb.auth.getSession(); if (!data.session) throw new Error('Sign in again');
+  const r = await fetch(BOOK_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify({...body, jwt:data.session.access_token, apikey:CFGX.supabaseKey})});
+  const j = await r.json(); if (j.error) throw new Error(j.error); return j;
+}
+function openBook(id) {
+  const L = byId(id); if (!L) return; sheetId = id; LOG = null; const S = STATE[id] || {}, bk = S.bk || {}, lg = langOf(L);
+  let body;
+  if (bk.done) {
+    body = `<div class="muted" style="font-size:13px">${bk.kind === 'person' ? 'In person' : 'Zoom'} · ${esc(bkWhen(bk.start, 'en'))} Dubai time${bk.email ? ' · invitation sent to ' + esc(bk.email) : ''}. It's in your Google Calendar with a reminder the day before.</div>
+      <a class="btn lg wa" href="${bkConfLink(L, bk)}" target="_blank" rel="noopener">${I.wa}Send the confirmation on WhatsApp</a>
+      <button class="btn" data-bnew="${L.i}">Book a different time</button><button class="btn" data-open="${L.i}">Open client file</button>`;
+  } else if (bk.slots && bk.slots.length) {
+    body = `<a class="btn lg wa" href="${bkOfferLink(L, bk)}" target="_blank" rel="noopener">${I.wa}Send the 3 times on WhatsApp</a>
+      <div class="muted" style="font-size:13px">When ${esc(firstName(L.name))} replies, tap the time he chose:</div>
+      ${bk.slots.map((s, i) => `<button class="btn ink" data-bpick="${L.i}:${i}">${i + 1}) ${esc(bkSlot(s, 'en'))}</button>`).join('')}
+      <button class="btn" data-bnew="${L.i}">Find new times</button>`;
+  } else {
+    body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="btn ${bk.kind !== 'person' ? 'ink' : ''}" data-bkind="${L.i}:zoom">Zoom</button><button class="btn ${bk.kind === 'person' ? 'ink' : ''}" data-bkind="${L.i}:person">In person</button></div>
+      ${bk.kind === 'person' ? `<div class="field"><label for="b-place">Place</label><input class="inp" id="b-place" value="${esc(bk.place || '')}" placeholder="Marrfa office, Opus Tower, Business Bay"></div>` : ''}
+      <div class="field"><label for="b-email">Client email (for the calendar invitation)</label><input class="inp" id="b-email" type="email" inputmode="email" value="${esc(bk.email || S.email || L.e || '')}" placeholder="optional"></div>
+      <button class="btn lg ink" data-bslots="${L.i}">Find my next 3 free times</button>`;
+  }
+  $('#sheet').innerHTML = `<div class="sh"><button class="ic x" data-close aria-label="Close">${I.x}</button><div class="eyebrow" style="color:var(--gold2)">Book meeting · ${lg.toUpperCase()}</div><div class="nm">${esc(L.name)}</div></div><div class="sb">${body}</div>`;
+  show();
+}
+function bkSet(id, patch) { const L = byId(id), s = stateOf(L); s.bk = {...(s.bk || {}), ...patch}; STATE[id] = s; return s; }
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-book],[data-bkind],[data-bslots],[data-bpick],[data-bnew]'); if (!el) return; const d = el.dataset;
+  if (d.book) { openBook(d.book); return; }
+  if (d.bnew) { const s = bkSet(d.bnew, {slots:null, done:0, start:null, zoom:''}); save(d.bnew, s, 'Ready for new times'); openBook(d.bnew); return; }
+  if (d.bkind) { const [id, k] = d.bkind.split(':'); const em = ($('#b-email') || {}).value; bkSet(id, {kind:k, ...(em !== undefined ? {email:em.trim()} : {})}); openBook(id); return; }
+  if (d.bslots) {
+    const id = d.bslots, bk = (STATE[id] || {}).bk || {}, place = (($('#b-place') || {}).value || bk.place || '').trim(), email = (($('#b-email') || {}).value || '').trim();
+    if (bk.kind === 'person' && !place) { toast('Add the place first'); return; }
+    el.disabled = true; el.textContent = 'Checking your calendar…';
+    try { const j = await bkCall({action:'slots'}); if (!j.slots || j.slots.length < 3) throw new Error('Not enough free times in the next 10 days'); const s = bkSet(id, {kind:bk.kind || 'zoom', place, email, slots:j.slots, done:0}); if (email) s.email = email; save(id, s, '3 free times ready'); openBook(id); }
+    catch (err) { toast(err.message); el.disabled = false; el.textContent = 'Find my next 3 free times'; }
+    return;
+  }
+  if (d.bpick) {
+    const [id, i] = d.bpick.split(':'), L = byId(id), bk = (STATE[id] || {}).bk || {}, start = bk.slots[+i];
+    el.disabled = true; el.textContent = 'Booking…';
+    try {
+      const j = await bkCall({action:'book', start, name:L.name, email:bk.email || '', kind:bk.kind || 'zoom', place:bk.place || ''});
+      const s = applyLog(L, {ch:'wa', o:'meet', temp:'Hot'}); const ymd = new Date(start).toLocaleDateString('en-CA', {timeZone:'Asia/Dubai'}), hm2 = new Date(start).toLocaleTimeString('en-GB', {timeZone:'Asia/Dubai', hour:'2-digit', minute:'2-digit', hour12:false});
+      s.meet = {d:ymd, t:hm2, place:bk.kind === 'person' ? bk.place : 'Zoom', ...(j.zoom ? {zoom:j.zoom} : {})}; s.next = ymd; s.bk = {...bk, start, zoom:j.zoom || '', done:1}; if (bk.email) s.email = bk.email;
+      await save(id, s, 'Booked in your calendar' + (j.invited ? ' · invitation emailed' : ''));
+      openBook(id);
+    } catch (err) { toast(err.message); el.disabled = false; el.textContent = `${+i + 1}) ${bkSlot(start, 'en')}`; }
+  }
+});
 function openSheet(id) {
   sheetId = id; const L = byId(id); if (!L) return; LOG = null; const S = STATE[id] || {};
   const old = OLD[L.t] || ['', ''], tz = tzOf(L);
@@ -712,7 +791,7 @@ function openSheet(id) {
     <div class="nm">${esc(L.name)}</div><div class="sub">${esc(L.status)} · ${old[0]}${L.due ? ' · next ' + nice(L.due) : ''}${L.bud ? ' · AED ' + fmt(L.bud) : ''}</div>
     ${L.p ? `<div style="display:flex;gap:10px;margin-top:16px"><a class="btn gold" style="flex:1" href="tel:${esc(L.p)}" data-call="${L.i}">${I.call}<span class="num">${esc(L.p)}</span></a><a class="btn wa" style="flex:1" href="${waLink(L)}" target="_blank" rel="noopener" data-wa="${L.i}">${I.wa}WhatsApp</a></div>` : ''}</div>
     <div class="sb">
-      ${L.p ? `<button class="btn ink" data-log="${L.i}">Log a call result</button>${CFG.trip_city ? `<a class="btn wa" href="${waLink(L, 'trip')}" target="_blank" rel="noopener" data-wa="${L.i}">${I.wa}Invite to meet in ${esc(CFG.trip_city)}</a>` : ''}` : `<div class="field"><label for="s-phone">Add the phone number</label><input class="inp num" id="s-phone" placeholder="+212 6…" inputmode="tel"></div><button class="btn ink" data-savephone="${L.i}">Save number · add to today</button>`}
+      ${L.p ? `<button class="btn ink" data-log="${L.i}">Log a call result</button><button class="btn" data-book="${L.i}">Book meeting · send 3 times</button>${CFG.trip_city ? `<a class="btn wa" href="${waLink(L, 'trip')}" target="_blank" rel="noopener" data-wa="${L.i}">${I.wa}Invite to meet in ${esc(CFG.trip_city)}</a>` : ''}` : `<div class="field"><label for="s-phone">Add the phone number</label><input class="inp num" id="s-phone" placeholder="+212 6…" inputmode="tel"></div><button class="btn ink" data-savephone="${L.i}">Save number · add to today</button>`}
       ${S.meet && S.meet.d >= todayStr() ? `<div class="nextline"><span class="grow"><b>Meeting ${nice(S.meet.d)} ${esc(S.meet.t || '')}</b>${S.meet.place ? ' · ' + esc(S.meet.place) : ''}</span><button class="btn sm" data-meet="${L.i}">Calendar</button></div>` : ''}<div class="field"><label for="s-step">Next step</label><input class="inp" id="s-step" value="${esc(L.step)}" placeholder="e.g. Send Emaar options with payment plans"></div>
       <div class="field"><label for="s-note">Notes</label><textarea class="inp" id="s-note" placeholder="What does this client want?">${esc(L.note)}</textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label for="s-status">Status</label><select class="inp" id="s-status">${STATUSES.map(s => `<option ${s === L.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div><div class="field"><label for="s-next">Next follow-up</label><input class="inp" type="date" id="s-next" value="${L.due || ''}"></div></div>
