@@ -659,6 +659,28 @@ function ring(v, max, label) {
   const p = Math.max(0, Math.min(1, max ? v / max : 0)), C = 2 * Math.PI * 40, col = p >= 1 ? 'var(--ok)' : 'var(--gold)';
   return `<div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#EFEBE4" stroke-width="8"/><circle cx="50" cy="50" r="40" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C * p} ${C}" transform="rotate(-90 50 50)"/><text x="50" y="52" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="30" font-weight="700" fill="var(--ink)">${fmt(v)}</text><text x="50" y="68" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="Manrope, Arial">of ${fmt(max)}</text></svg>${label}</div>`;
 }
+// ---------- Meta ads: real results per ad, from your own call logs ----------
+function adsHTML(leads) {
+  const M = leads.filter(L => /^M\d/.test(L.i));
+  const head = '<div class="eyebrow">Meta ads · what each ad really brings</div>';
+  if (!M.length) return `<div class="card panel" style="margin-top:14px">${head}<div class="muted" style="font-size:13px;margin-top:6px">No ad leads yet. Once your lead form runs, each ad shows here with its leads, qualified buyers, meetings and deals, based on your own call results.</div></div>`;
+  const QS = ['Warm', 'Hot', 'Meeting set', 'Offer/EOI sent', 'Closed won'], g = {};
+  for (const L of M) {
+    const k = L.ad || L.cmp || (L.src || '').split(' · ')[1] || 'Unnamed ad', r = g[k] = g[k] || {n:0, q:0, m:0, d:0, j:0, w:0}, ev = L.ev || [];
+    const met = ev.some(e => ['meet', 'offer', 'deal'].includes(e.o)) || ['Meeting set', 'Offer/EOI sent', 'Closed won'].includes(L.status);
+    r.n++; if (QS.includes(L.status) || met) r.q++; if (met) r.m++; if (L.status === 'Closed won' || ev.some(e => e.o === 'deal')) r.d++; if (L.status === 'Dead') r.j++; if (L.status === 'New') r.w++;
+  }
+  const verdict = r => { const done = r.n - r.w; if (done < 5) return ['Too early', '']; const q = r.q / done; return q >= .3 ? ['Keep', 'ok'] : q < .1 ? ['Kill', 'hot'] : ['Watch', 'gold']; };
+  const rows = Object.entries(g).sort((a, b) => b[1].q - a[1].q || b[1].n - a[1].n);
+  const tot = rows.reduce((a, [, r]) => ({n:a.n + r.n, q:a.q + r.q, m:a.m + r.m, d:a.d + r.d, w:a.w + r.w}), {n:0, q:0, m:0, d:0, w:0});
+  const th = 'style="text-align:right;padding:6px 4px;font-weight:600"', td = 'style="text-align:right;padding:8px 4px"';
+  return `<div class="card panel" style="margin-top:14px">${head}
+    <div class="muted" style="font-size:12.5px;margin:6px 0 10px">${tot.n} leads · ${tot.q} qualified (${tot.n - tot.w ? Math.round(tot.q / (tot.n - tot.w) * 100) : 0}% of those called) · ${tot.m} meetings · ${tot.d} deals${tot.w ? ` · <b>${tot.w} not called yet</b>` : ''}</div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:1px solid var(--line,#ddd)"><th style="text-align:left;padding:6px 4px;font-weight:600">Ad</th><th ${th}>Leads</th><th ${th}>Qualified</th><th ${th}>Meetings</th><th ${th}>Deals</th><th ${th}>Junk</th><th ${th}></th></tr></thead><tbody>
+    ${rows.map(([k, r]) => { const [v, c] = verdict(r); return `<tr style="border-bottom:1px solid var(--line,#eee)"><td style="padding:8px 4px">${esc(k)}${r.w ? `<div class="muted" style="font-size:11.5px">${r.w} not called</div>` : ''}</td><td ${td}>${r.n}</td><td ${td}><b>${r.q}</b></td><td ${td}>${r.m}</td><td ${td}>${r.d}</td><td ${td}>${r.j}</td><td ${td}><span class="pill ${c}">${v}</span></td></tr>`; }).join('')}
+    </tbody></table></div>
+    <div class="muted" style="font-size:12px;margin-top:8px">Judged on qualified buyers, never on cheap leads. Keep = 30%+ qualified, Kill = under 10%, after at least 5 called leads. Every status you log also goes back to Meta to train the ads.</div></div>`;
+}
 function vResults() {
   const t = todayStr(), mo = kpis(monthStart(t), monthEnd(t)), wk = kpis(monday(t), t), td = kpis(t, t), leads = all();
   const day = KV['day-' + t] || {};
@@ -668,7 +690,7 @@ function vResults() {
   const cs = countryList(leads).filter(c => c.c !== 'No number yet').slice(0, 8), maxC = Math.max(1, ...cs.map(c => c.n));
   const funnel = [['Clients', leads.length], ['Worked so far', leads.filter(L => L.has).length], ['Conversations this month', mo.conv], ['Meetings this month', mo.meet], ['Offers / EOIs this month', mo.offer], ['Deals this month', mo.deal]], fmax = Math.max(1, ...funnel.map(f => f[1]));
   const over = leads.filter(L => L.due && L.due < t).length;
-  return `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {month:'long', year:'numeric', timeZone:'UTC'})}</div><h1 class="h1">Results</h1></div></div>${reportHTML()}
+  return `<div class="greet"><div><div class="eyebrow">${parseD(t).toLocaleDateString('en-GB', {month:'long', year:'numeric', timeZone:'UTC'})}</div><h1 class="h1">Results</h1></div></div>${reportHTML()}${adsHTML(leads)}
   <div class="tiles">
     <div class="card tile"><span class="eyebrow">Calls today</span><span class="v num">${td.calls}<small> / ${CFG.calls}</small></span><span class="muted" style="font-size:12.5px">${td.msgs} WhatsApps sent</span></div>
     <div class="card tile"><span class="eyebrow">Overdue</span><span class="v num" style="color:${over ? 'var(--hot)' : 'var(--ok)'}">${over}</span><span class="muted" style="font-size:12.5px">Your standard: zero</span></div>
